@@ -2,6 +2,7 @@
 usage() {
   echo 'USAGE:'
   echo "${0}
+    -h                    # Display USAGE
     -m <master || slave>  # afl++ Mode
     -a <mod_auth_pam,...> # Comma-delimited httpd Modules to Instrument
     -n                    # Nuke contents of multi-sync (New afl++ Session)
@@ -9,17 +10,26 @@ usage() {
   exit 1
 }
 
+no_args='true'
+afl_mode=''
 httpd_modules_for_instrumentation=''
 nuke_multi_sync='false'
 
-while getopts 'a:m:n' flag; do
+while getopts ":hm:a:n" flag; do
   case "${flag}" in
-    m) afl_mode="${OPTARG}" ;;
-    a) httpd_modules_for_instrumentation="${OPTARG}" ;;
-    n) nuke_multi_sync='true' ;;
+    'h') usage;;
+    'm') afl_mode="${OPTARG}";;
+    'a') httpd_modules_for_instrumentation="${OPTARG}";;
+    'n') nuke_multi_sync='true';;
     *) usage;;
   esac
+  no_args='false'
 done
+
+# If no args are passed, then return usage
+if [[ $no_args == 'true' ]]; then
+  usage
+fi
 
 repo_root=$(pwd)
 repo_name=`basename ${repo_root}`
