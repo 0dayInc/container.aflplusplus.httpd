@@ -1,5 +1,6 @@
 PATCH / HTTP/1.1
 Host: 127.0.0.1
+Authorization: Basic cm9vdDp0b29yCg==
 
 foo=bar
 
