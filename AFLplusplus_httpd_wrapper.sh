@@ -61,7 +61,7 @@ repo_name=`basename ${repo_root}`
 docker_repo_root="/opt/${repo_name}"
 
 fuzz_session_root='/fuzz_session'
-httpd_test_cases="${docker_repo_root}/httpd/test_cases"
+httpd_test_cases="${repo_root}/httpd/test_cases"
 
 afl_session_root="${fuzz_session_root}/AFLplusplus"
 afl_input="${afl_session_root}/input"
@@ -88,11 +88,6 @@ fi
 
 # Update $afl_input w/ httpd Test Cases
 cp $httpd_test_cases/* $afl_input
-
-# Nuke contents of multi-sync (New afl++ Session) if -n was passed as arg
-if [[ -d $afl_output && $nuke_multi_sync == 'true' ]]; then
-  rm -rf $afl_output
-fi
 
 if [[ $afl_mode == 'master' ]]; then
   afl_mode_selection='-M httpd1'
@@ -121,21 +116,21 @@ case $afl_mode in
       case $httpd_module in 
         'mod_auth_pam')
           echo "Instrumenting ${httpd_module}!"
-          mod_auth_pam_test_cases="${docker_repo_root}/mod_auth_pam/test_cases"
+          mod_auth_pam_test_cases="${repo_root}/mod_auth_pam/test_cases"
           cp $mod_auth_pam_test_cases/* $afl_input
           afl_instrument_mod_auth_pam="${docker_repo_root}/mod_auth_pam/mod_auth_pam_instrument_w_aflplusplus.sh"
           afl_instrument_httpd_and_fuzz_session_init="${afl_instrument_mod_auth_pam} &&"
           ;;
         'mod_fastcgi') 
           echo "Instrumenting ${httpd_module}!"
-          mod_fastcgi_test_cases="${docker_repo_root}/mod_fastcgi/test_cases"
+          mod_fastcgi_test_cases="${repo_root}/mod_fastcgi/test_cases"
           cp $mod_fastcgi_test_cases/* $afl_input
           afl_instrument_mod_fastcgi="${docker_repo_root}/mod_fastcgi/mod_fastcgi_instrument_w_aflplusplus.sh"
           afl_instrument_httpd_and_fuzz_session_init="${afl_instrument_mod_fastcgi} &&"
           ;;
         'mod_ssl')
           echo "Instrumenting ${httpd_module}!"
-          mod_ssl_test_cases="${docker_repo_root}/mod_ssl/test_cases"
+          mod_ssl_test_cases="${repo_root}/mod_ssl/test_cases"
           cp $mod_ssl_test_cases/* $afl_input
           afl_instrument_mod_ssl="${docker_repo_root}/mod_ssl/mod_ssl_instrument_w_aflplusplus.sh"
           afl_instrument_httpd_and_fuzz_session_init="${afl_instrument_mod_ssl} &&"
@@ -145,7 +140,16 @@ case $afl_mode in
            usage;; 
       esac
     done
+
+    # Nuke contents of multi-sync (New afl++ Session)
+    # if -n was passed as arg
+    if [[ -d $afl_output && $nuke_multi_sync == 'true' ]]; then
+      sudo rm -rf $afl_output
+    fi
+
     afl_instrument_httpd_and_fuzz_session_init="${afl_instrument_httpd_and_fuzz_session_init} ${fuzz_session_init}"
+
+    echo $afl_instrument_httpd_and_fuzz_session_init
     
     # Instrument & Run Master
     sudo sysctl -w kernel.unprivileged_userns_clone=1
