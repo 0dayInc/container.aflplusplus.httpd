@@ -22,7 +22,7 @@ fi
 
 apt update
 apt full-upgrade -y
-apt install -y subversion libssl-dev pkg-config strace netstat-nat net-tools apt-file tcpdump lsof pmisc
+apt install -y subversion libssl-dev pkg-config strace netstat-nat net-tools apt-file tcpdump lsof psmisc
 
 httpd_repo_root=`dirname ${httpd_repo}`
 httpd_repo_name=`basename ${httpd_repo}`
