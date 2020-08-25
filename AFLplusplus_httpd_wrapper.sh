@@ -105,11 +105,11 @@ fuzz_session_init="
 
 case $afl_mode in
   'master')
-    # Build out afl_instrument_httpd_and_fuzz_session_init 
+    # Build out afl_instrument_and_fuzz_session_init 
     # by parsing httpd_modules_for_instrumentation
     echo 'Building latest trunk of httpd...'
     afl_instrument_httpd="${docker_repo_root}/httpd/httpd_instrument_w_aflplusplus.sh"
-    afl_instrument_httpd_and_fuzz_session_init="${afl_instrument_httpd} &&"
+    afl_instrument_and_fuzz_session_init="${afl_instrument_httpd} &&"
 
     delimit=',' read -r -a httpd_mod_arr <<< "$httpd_modules_for_instrumentation"
     for httpd_module in "${httpd_mod_arr[@]}"; do
@@ -119,21 +119,21 @@ case $afl_mode in
           mod_auth_pam_test_cases="${repo_root}/mod_auth_pam/test_cases"
           cp $mod_auth_pam_test_cases/* $afl_input
           afl_instrument_mod_auth_pam="${docker_repo_root}/mod_auth_pam/mod_auth_pam_instrument_w_aflplusplus.sh"
-          afl_instrument_httpd_and_fuzz_session_init="${afl_instrument_mod_auth_pam} &&"
+          afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${afl_instrument_mod_auth_pam} &&"
           ;;
         'mod_fastcgi') 
           echo "Instrumenting ${httpd_module}!"
           mod_fastcgi_test_cases="${repo_root}/mod_fastcgi/test_cases"
           cp $mod_fastcgi_test_cases/* $afl_input
           afl_instrument_mod_fastcgi="${docker_repo_root}/mod_fastcgi/mod_fastcgi_instrument_w_aflplusplus.sh"
-          afl_instrument_httpd_and_fuzz_session_init="${afl_instrument_mod_fastcgi} &&"
+          afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${afl_instrument_mod_fastcgi} &&"
           ;;
         'mod_ssl')
           echo "Instrumenting ${httpd_module}!"
           mod_ssl_test_cases="${repo_root}/mod_ssl/test_cases"
           cp $mod_ssl_test_cases/* $afl_input
           afl_instrument_mod_ssl="${docker_repo_root}/mod_ssl/mod_ssl_instrument_w_aflplusplus.sh"
-          afl_instrument_httpd_and_fuzz_session_init="${afl_instrument_mod_ssl} &&"
+          afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${afl_instrument_mod_ssl} &&"
           ;;
         *) echo "Invalid httpd_module ${httpd_module}"
            echo 'Use -L to list modules supported.'
@@ -147,7 +147,7 @@ case $afl_mode in
       sudo rm -rf $afl_output
     fi
 
-    afl_instrument_httpd_and_fuzz_session_init="${afl_instrument_httpd_and_fuzz_session_init} ${fuzz_session_init}"
+    afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${fuzz_session_init}"
 
     echo $afl_instrument_httpd_and_fuzz_session_init
     
@@ -157,12 +157,12 @@ case $afl_mode in
       --privileged \
       --rm \
       --name aflplusplus.httpd.$RANDOM \
-      --mount type=bind,source=$repo_root,target=/opt \
+      --mount type=bind,source=`dirname ${repo_root}`,target=/opt \
       --mount type=bind,source=$fuzz_session_root,target=$fuzz_session_root \
       --interactive \
       --tty aflplusplus/aflplusplus \
       /bin/bash --login \
-      -c "${afl_instrument_httpd_and_fuzz_session_init}"
+      -c "${afl_instrument_and_fuzz_session_init}"
     sudo sysctl -w kernel.unprivileged_userns_clone=0
     ;;
 
