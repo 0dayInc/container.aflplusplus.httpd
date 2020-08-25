@@ -12,7 +12,7 @@ usage() {
 httpd_modules_for_instrumentation=''
 nuke_multi_sync='false'
 
-while getopts 'a:m:' flag; do
+while getopts 'a:m:n' flag; do
   case "${flag}" in
     m) afl_mode="${OPTARG}" ;;
     a) httpd_modules_for_instrumentation="${OPTARG}" ;;
