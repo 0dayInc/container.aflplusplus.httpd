@@ -72,7 +72,7 @@ httpd_repo="${fuzz_session_root}/httpd"
 if [[ $custom_httpd_conf == '' ]]; then
   target_binary="${httpd_repo}/BINROOT/bin/httpd -X"
 else
-  target_binary="${httpd_repo}/BINROOT/bin/httpd -X"
+  target_binary="${httpd_repo}/BINROOT/bin/httpd -X -f ${custom_httpd_conf}"
 fi
 
 if [[ ! -d $afl_session_root ]]; then
