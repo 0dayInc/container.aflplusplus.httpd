@@ -92,9 +92,9 @@ cp $httpd_test_cases/* $afl_input
 if [[ $afl_mode == 'master' ]]; then
   afl_mode_selection='-M httpd1'
 else
-  next_slave_int=$(expr 1 + `ls $afl_output | grep httpd | tail -n 1 | sed 's/httpd//g'`)
-  afl_mode_selection="-S httpd${next_slave_int}"
-  #afl_mode_selection="-S httpd${RANDOM}"
+  #next_slave_int=$(expr 1 + `ls $afl_output | grep httpd | tail -n 1 | sed 's/httpd//g'`)
+  #afl_mode_selection="-S httpd${next_slave_int}"
+  afl_mode_selection="-S httpd${RANDOM}"
 fi
 
 fuzz_session_init="
