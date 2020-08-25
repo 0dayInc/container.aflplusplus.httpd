@@ -1,14 +1,25 @@
 #!/bin/bash --login
 usage() {
-  echo "USAGE: ${0} <master||slave>"
+  echo 'USAGE:'
+  echo "${0}
+    -m <master || slave>  # afl++ Mode
+    -a <mod_auth_pam,...> # Comma-delimited httpd Modules to Instrument
+    -n                    # Nuke contents of multi-sync (New afl++ Session)
+  "
   exit 1
 }
 
-if [[ $# != 1 ]]; then
-  usage
-fi
+httpd_modules_for_instrumentation=''
+nuke_multi_sync='false'
 
-afl_mode="${1}"
+while getopts 'a:m:' flag; do
+  case "${flag}" in
+    m) afl_mode="${OPTARG}" ;;
+    a) httpd_modules_for_instrumentation="${OPTARG}" ;;
+    n) nuke_multi_sync='true' ;;
+    *) usage;;
+  esac
+done
 
 repo_root=$(pwd)
 repo_name=`basename ${repo_root}`
@@ -39,11 +50,17 @@ fi
 # Update $afl_input w/ httpd Test Cases
 cp $httpd_test_cases/* $afl_input
 
+# Nuke contents of multi-sync (New afl++ Session) if -n was passed as arg
+if [[ -d $afl_output && $nuke_multi_sync == 'true' ]]; then
+  rm -rf $afl_output
+fi
+
 if [[ $afl_mode == 'master' ]]; then
   afl_mode_selection='-M httpd1'
 else
-  next_slave_int=$(expr 1 + `ls $afl_output | grep httpd | awk '{print$NF}' | sed 's/httpd//g' | tail -n 1`)
-  afl_mode_selection="-S httpd${RANDOM}"
+  next_slave_int=$(expr 1 + `ls $afl_output | grep httpd | tail -n 1 | sed 's/httpd//g'`)
+  afl_mode_selection="-S httpd${next_slave_int}"
+  #afl_mode_selection="-S httpd${RANDOM}"
 fi
 
 fuzz_session_init="
