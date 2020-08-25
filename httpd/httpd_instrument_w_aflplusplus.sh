@@ -30,7 +30,7 @@ httpd_repo_name=`basename ${httpd_repo}`
 cd $httpd_repo_root && svn checkout http://svn.apache.org/repos/asf/httpd/httpd/trunk $httpd_repo_name
 cd $httpd_repo && svn checkout http://svn.apache.org/repos/asf/apr/apr/trunk srclib/apr
 
-fuzz_httpd_w_aflplusplus_patch="${docker_repo_root}/patch_httpd_w_AFL_persistent_support.diff"
+fuzz_httpd_w_aflplusplus_patch="${docker_repo_root}/httpd/patch_httpd_w_AFL_persistent_support.diff"
 
 # Patch Apache to Support Preferred AFL CC & CXX
 cd $httpd_repo && patch -p0 -i $fuzz_httpd_w_aflplusplus_patch  
