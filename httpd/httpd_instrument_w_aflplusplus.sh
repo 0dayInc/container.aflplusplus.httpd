@@ -25,12 +25,13 @@ apt full-upgrade -y
 apt install -y subversion libssl-dev pkg-config strace netstat-nat net-tools apt-file tcpdump lsof psmisc logrotate
 
 # Configure logrotate to rotate logs every hour
+logrotate_script='/usr/local/sbin/logrotate.sh'
 mkdir /etc/logrotate.minute.d
 echo 'include /etc/logrotate.minute.d' > /etc/logrotate.minute.conf
 chmod 644 /etc/logrotate.minute.conf
 
-echo '* * * * * /usr/sbin/logrotate /etc/logrotate.minute.conf' > /etc/cron.d/logrotate
-chmod 775 /etc/cron.d/logrotate
+echo '* * * * * /usr/sbin/logrotate /etc/logrotate.minute.conf' > $logrotate_script
+chmod 775 $logrotate_script
 
 cat << EOF | tee /etc/logrotate.minute.d/httpd
 ${httpd_prefix}/logs/access_log {
@@ -53,7 +54,7 @@ ${httpd_prefix}/logs/error_log {
   nomail
 }
 EOF
-
+(crontab -l 2>/dev/null; echo "* * * * * ${logrotate_script}") | crontab -
 /etc/init.d/cron start
 
 # Okay, now let's instrument httpd...
