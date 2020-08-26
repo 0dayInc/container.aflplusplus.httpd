@@ -280,14 +280,14 @@ DocumentRoot "${DOCROOT}"
 # logged here.  If you *do* define an error logfile for a <VirtualHost>
 # container, that host's errors will be logged there and not here.
 #
-#ErrorLog "logs/error_log"
+ErrorLog "logs/error_log"
 
 #
 # LogLevel: Control the number of messages logged to the error_log.
 # Possible values include: debug, info, notice, warn, error, crit,
 # alert, emerg.
 #
-#LogLevel warn
+LogLevel error
 
 <IfModule log_config_module>
     #
@@ -520,5 +520,3 @@ Include conf/extra/proxy-html.conf
 SSLRandomSeed startup builtin
 SSLRandomSeed connect builtin
 </IfModule>
-
-ErrorLog /dev/null
