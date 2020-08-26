@@ -30,7 +30,10 @@ mkdir /etc/logrotate.minute.d
 echo 'include /etc/logrotate.minute.d' > /etc/logrotate.minute.conf
 chmod 644 /etc/logrotate.minute.conf
 
-echo '* * * * * /usr/sbin/logrotate /etc/logrotate.minute.conf' > $logrotate_script
+cat << EOF | tee $logrotate_script
+#!/bin/bash --login
+/usr/sbin/logrotate /etc/logrotate.minute.conf
+EOF
 chmod 775 $logrotate_script
 
 cat << EOF | tee /etc/logrotate.minute.d/httpd
