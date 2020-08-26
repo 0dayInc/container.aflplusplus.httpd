@@ -14,10 +14,12 @@ usage() {
                           # Enable custom httpd.conf file
                           # for more advanced httpd mockups
                           # Resides in /fuzz_session/httpd.conf
+                          # which is tmpfs and LOST AFTER REBOOT
 
     -d                    # OPTIONAL / master MODE ONLY
                           # Enable Custom Apache Document Root
                           # Resides in /fuzz_session/htdocs
+                          # which is tmpfs and LOST AFTER REBOOT
 
     -n                    # OPTIONAL
                           # Nuke contents of multi-sync (New afl++ Session)
