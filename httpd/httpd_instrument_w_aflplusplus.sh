@@ -25,22 +25,17 @@ apt full-upgrade -y
 apt install -y subversion libssl-dev pkg-config strace netstat-nat net-tools apt-file tcpdump lsof psmisc logrotate
 
 # Configure logrotate to rotate logs every hour
-mkdir /etc/logrotate.hourly.d
-echo 'include /etc/logrotate.hourly.d' > /etc/logrotate.hourly.conf
-chmod 644 /etc/logrotate.hourly.conf
+mkdir /etc/logrotate.minute.d
+echo 'include /etc/logrotate.minute.d' > /etc/logrotate.minute.conf
+chmod 644 /etc/logrotate.minute.conf
 
-cat << EOF | tee /etc/cron.hourly/logrotate
-#!/bin/bash
-test -x /usr/sbin/logrotate || exit 0
-/usr/sbin/logrotate /etc/logrotate.hourly.conf
-EOF
+echo '* * * * * /usr/sbin/logrotate /etc/logrotate.minute.conf' > /etc/cron.d/logrotate
+chmod 775 /etc/cron.d/logrotate
 
-chmod 775 /etc/cron.hourly/logrotate
-
-cat << EOF | tee /etc/logrotate.hourly.d/httpd
+cat << EOF | tee /etc/logrotate.minute.d/httpd
 ${httpd_prefix}/logs/access_log {
   size 128M
-  rotate 1
+  rotate 0
   copytruncate
   missingok
   notifempty
@@ -50,7 +45,7 @@ ${httpd_prefix}/logs/access_log {
 
 ${httpd_prefix}/logs/error_log {
   size 128M
-  rotate 1
+  rotate 0
   copytruncate
   missingok
   notifempty
