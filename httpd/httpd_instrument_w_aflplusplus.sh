@@ -82,7 +82,3 @@ cd $httpd_repo && CC=$preferred_afl CXX=$preferred_aflplusplus ./buildconf
 cd ${httpd_repo} && CC=$preferred_afl CXX=$preferred_aflplusplus ./configure --prefix=$httpd_prefix
 cd ${httpd_repo} && CC=$preferred_afl CXX=$preferred_aflplusplus make
 cd ${httpd_repo} && make install
-  
-# Disable Logging So We Don't Fill Up tmpfs Partition
-#sed -e '/Log/ s/^#*/#/' -i ${httpd_repo}/BINROOT/conf/httpd.conf
-#echo 'ErrorLog /dev/null' >> ${httpd_repo}/BINROOT/conf/httpd.conf
