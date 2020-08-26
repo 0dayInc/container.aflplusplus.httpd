@@ -95,7 +95,7 @@ httpd_repo="${fuzz_session_root}/httpd"
 if [[ ! -d $fuzz_session_root ]]; then
   sudo mkdir $fuzz_session_root
   sudo chmod 777 $fuzz_session_root 
-  sudo mount -t tmpfs -o exec,nosuid,nodev,noatime,mode=1777,size=4G tmpfs $fuzz_session_root
+  sudo mount -t tmpfs -o exec,nosuid,nodev,noatime,mode=1777,size=8G tmpfs $fuzz_session_root
 fi
 
 if [[ ! -d $afl_session_root ]]; then
