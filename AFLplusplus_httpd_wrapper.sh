@@ -8,7 +8,8 @@ usage() {
                           # afl++ Mode 
 
     -a <mod_auth_pam,...> # OPTIONAL / master MODE ONLY
-                          # Comma-delimited httpd Modules to Instrument
+                          # Comma-delimited httpd 3rd
+                          # Party Modules to Instrument
 
     -d                    # OPTIONAL / master MODE ONLY
                           # Enable Custom Apache Document Root
@@ -38,8 +39,7 @@ usage() {
 list_supported_httpd_modules_to_instrument() {
   echo "List of Supported httpd Modules to Instrument:
     mod_auth_pam,
-    mod_fastcgi,
-    mod_ssl
+    mod_fastcgi
   "
   exit 0
 }
@@ -122,7 +122,7 @@ else
   target_binary="${httpd_repo}/BINROOT/bin/httpd -X -f ${fuzz_session_root}/httpd.conf"
 fi
 
-# Copy httpd Test Cases to $afl_input Folder
+# Copy httpd && userland Test Cases to $afl_input Folder
 cp $httpd_test_cases/* $afl_input
 cp $userland_test_cases/* $afl_input
 

@@ -13,23 +13,16 @@ afl_session_root="${fuzz_session_root}/AFLplusplus"
 afl_input="${afl_session_root}/input"
 afl_output="${afl_session_root}/multi_sync"
 
-mod_fastcgi_tar_gz='mod_fastcgi-2.0-1.1.1.tar.gz'
-mod_fastcgi_uri="http://pam.sourceforge.net/mod_fastcgi/dist/${mod_fastcgi_tar_gz}"
+github_root='https://github.com/FastCGI-Archives/FastCGI.com/raw/master/original_snapshot'
+mod_fastcgi_tar_gz='mod_fastcgi-SNAP-0910052141.tar.gz'
+mod_fastcgi_uri="${github_root}/${mod_fastcgi_tar_gz}"
+
 httpd_repo="${fuzz_session_root}/httpd"
 httpd_prefix="${httpd_repo}/BINROOT"
-mod_fastcgi_repo="${httpd_repo}/mod_fastcgi"
+mod_fastcgi_repo="${httpd_repo}/mod_fastcgi-SNAP-0910052141"
 repo_name=`basename ${mod_fastcgi_repo}`
 
 cd $httpd_repo && wget $mod_fastcgi_uri && tar -xzvf $mod_fastcgi_tar_gz
 
 # Instrument mod_fastcgi
-export PATH=$PATH:${httpd_prefix}/bin
-apt install -y libpam0g-dev
 cd ${mod_fastcgi_repo} && CC=$preferred_afl CXX=$preferred_aflplusplus make && make install
-# This symlink is to properly reference absolute path of pam_unix.so found in /etc/pam.d/httpd
-ln -s /lib/x86_64-linux-gnu/security /lib/security
-
-# Overwrite Default httpd.conf w/ One that Support Basic AuthN
-mod_fastcgi_httpd_conf="${docker_repo_root}/mod_fastcgi/mod_fastcgi_httpd.conf"
-cp $httpd_prefix/conf/httpd.conf $httpd_prefix/conf/httpd.conf.ORIG
-cp $mod_fastcgi_httpd_conf $httpd_prefix/conf/httpd.conf
