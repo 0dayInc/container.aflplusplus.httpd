@@ -15,7 +15,7 @@ usage() {
                           # for more advanced httpd mockups
 
     -d <docroot path>     # OPTIONAL / master MODE ONLY
-                          # Path to csutom Apache
+                          # Path to custom Apache
                           # Document Root (Web Root)
 
     -n                    # OPTIONAL
@@ -60,6 +60,13 @@ done
 # If no args are passed, then return usage
 if [[ $no_args == 'true' ]]; then
   usage
+fi
+
+if [[ $afl_mode != 'master' ]]; then
+  if [[ $httpd_modules_for_instrumentation != '' || $httpd_modules_for_instrumentation != '' || $custom_docroot != '' ]]; then
+    echo "ERROR: -a || -f || -d Flags Can Only be Used with -m master"
+    usage
+  fi
 fi
 
 repo_root=$(pwd)
