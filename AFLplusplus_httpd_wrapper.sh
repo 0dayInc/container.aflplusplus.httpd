@@ -10,12 +10,16 @@ usage() {
     -a <mod_auth_pam,...> # OPTIONAL / master MODE ONLY
                           # Comma-delimited httpd Modules to Instrument
 
-    -n                    # OPTIONAL
-                          # Nuke contents of multi-sync (New afl++ Session)
-
-    -c <httpd.conf>       # OPTIONAL
+    -f <httpd.conf>       # OPTIONAL / master MODE ONLY
                           # Path to custom httpd.conf file
                           # for more advanced httpd mockups
+
+    -d <docroot path>     # OPTIONAL / master MODE ONLY
+                          # Path to csutom Apache
+                          # Document Root (Web Root)
+
+    -n                    # OPTIONAL
+                          # Nuke contents of multi-sync (New afl++ Session)
 
     -L                    # OPTIONAL
                           # List supported httpd modules to instrument
@@ -34,17 +38,19 @@ list_supported_httpd_modules_to_instrument() {
 
 no_args='true'
 custom_httpd_conf=''
+custom_docroot=''
 afl_mode=''
 httpd_modules_for_instrumentation=''
 nuke_multi_sync='false'
 
-while getopts "hc:m:a:nL" flag; do
+while getopts "hm:a:f:d:nL" flag; do
   case $flag in
     'h') usage;;
     'm') afl_mode="${OPTARG}";;
     'a') httpd_modules_for_instrumentation="${OPTARG}";;
     'n') nuke_multi_sync='true';;
     'f') custom_httpd_conf="${OPTARG}";;
+    'd') custom_docroot="${OPTARG}";;
     'L') list_supported_httpd_modules_to_instrument;;
     *) usage;;
   esac
@@ -153,16 +159,30 @@ case $afl_mode in
     
     # Instrument & Run Master
     sudo sysctl -w kernel.unprivileged_userns_clone=1
-    docker run \
-      --privileged \
-      --rm \
-      --name aflplusplus.httpd.$RANDOM \
-      --mount type=bind,source=`dirname ${repo_root}`,target=/opt \
-      --mount type=bind,source=$fuzz_session_root,target=$fuzz_session_root \
-      --interactive \
-      --tty aflplusplus/aflplusplus \
-      /bin/bash --login \
-      -c "${afl_instrument_and_fuzz_session_init}"
+    if [[ $custom_docroot == '' ]]; then
+      docker run \
+        --privileged \
+        --rm \
+        --name aflplusplus.httpd.$RANDOM \
+        --mount type=bind,source=`dirname ${repo_root}`,target=/opt \
+        --mount type=bind,source=$fuzz_session_root,target=$fuzz_session_root \
+        --interactive \
+        --tty aflplusplus/aflplusplus \
+        /bin/bash --login \
+        -c "${afl_instrument_and_fuzz_session_init}"
+    else
+      docker run \
+        --privileged \
+        --rm \
+        --name aflplusplus.httpd.$RANDOM \
+        --mount type=bind,source=$custom_docroot,target=$httpd_repo/BINROOT/htdocs \
+        --mount type=bind,source=`dirname ${repo_root}`,target=/opt \
+        --mount type=bind,source=$fuzz_session_root,target=$fuzz_session_root \
+        --interactive \
+        --tty aflplusplus/aflplusplus \
+        /bin/bash --login \
+        -c "${afl_instrument_and_fuzz_session_init}"
+    fi
     sudo sysctl -w kernel.unprivileged_userns_clone=0
     ;;
 
