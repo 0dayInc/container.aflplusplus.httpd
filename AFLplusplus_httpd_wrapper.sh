@@ -15,11 +15,13 @@ usage() {
                           # for more advanced httpd mockups
                           # Resides in /fuzz_session/httpd.conf
                           # which is tmpfs and LOST AFTER REBOOT
+                          # OF HOST OS
 
     -d                    # OPTIONAL / master MODE ONLY
                           # Enable Custom Apache Document Root
                           # Resides in /fuzz_session/htdocs
                           # which is tmpfs and LOST AFTER REBOOT
+                          # OF HOST OS
 
     -n                    # OPTIONAL
                           # Nuke contents of multi-sync (New afl++ Session)
@@ -97,7 +99,7 @@ if [[ ! -d $fuzz_session_root/htdocs ]]; then
 fi
 
 if [[ ! -f $fuzz_session_root/httpd.conf ]]; then
-  touch $fuzz_session_root/httpd.conf
+  cp $repo_root/custom_httpd.conf.TEMPLATE $fuzz_session_root/httpd.conf
 fi
 
 if [[ ! -d $afl_input ]]; then
@@ -198,7 +200,6 @@ case $afl_mode in
         --name aflplusplus.httpd.$RANDOM \
         --mount type=bind,source=`dirname ${repo_root}`,target=/opt \
         --mount type=bind,source=$fuzz_session_root,target=$fuzz_session_root \
-        --mount type=bind,source=$fuzz_session_root/htdocs,target=$httpd_repo/BINROOT/htdocs \
         --interactive \
         --tty aflplusplus/aflplusplus \
         /bin/bash --login \
