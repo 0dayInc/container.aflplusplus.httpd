@@ -29,7 +29,7 @@ mkdir /etc/logrotate.hourly.d
 echo 'include /etc/logrotate.hourly.d' > /etc/logrotate.hourly.conf
 chmod 644 /etc/logrotate.hourly.conf
 
-cat << EOF | sudo tee /etc/cron.hourly/logrotate
+cat << EOF | tee /etc/cron.hourly/logrotate
 #!/bin/bash
 test -x /usr/sbin/logrotate || exit 0
 /usr/sbin/logrotate /etc/logrotate.hourly.conf
