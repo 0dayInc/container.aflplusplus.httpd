@@ -37,7 +37,7 @@ EOF
 
 chmod 775 /etc/cron.hourly/logrotate
 
-cat << EOF | sudo tee /etc/logrotate.hourly.d/httpd
+cat << EOF | tee /etc/logrotate.hourly.d/httpd
 ${httpd_prefix}/logs/access_log {
   size 128M
   rotate 1
