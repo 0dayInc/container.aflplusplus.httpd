@@ -10,6 +10,12 @@ usage() {
     -a <mod_auth_pam,...> # OPTIONAL / master MODE ONLY
                           # Comma-delimited httpd Modules to Instrument
 
+    -d                    # OPTIONAL / master MODE ONLY
+                          # Enable Custom Apache Document Root
+                          # Resides in /fuzz_session/htdocs
+                          # which is tmpfs and LOST AFTER REBOOT
+                          # OF HOST OS
+
     -f                    # OPTIONAL / master MODE ONLY
                           # Enable custom httpd.conf file
                           # for more advanced httpd mockups
@@ -17,14 +23,11 @@ usage() {
                           # which is tmpfs and LOST AFTER REBOOT
                           # OF HOST OS
 
-    -d                    # OPTIONAL / master MODE ONLY
-                          # Enable Custom Apache Document Root
-                          # Resides in /fuzz_session/htdocs
+    -n                    # OPTIONAL / master MODE ONLY
+                          # Nuke contents of multi-sync (New afl++ Session)
+                          # Resides in /fuzz_session/AFLplusplus/multi_sync
                           # which is tmpfs and LOST AFTER REBOOT
                           # OF HOST OS
-
-    -n                    # OPTIONAL
-                          # Nuke contents of multi-sync (New afl++ Session)
 
     -L                    # OPTIONAL
                           # List supported httpd modules to instrument
@@ -68,8 +71,8 @@ if [[ $no_args == 'true' ]]; then
 fi
 
 if [[ $afl_mode != 'master' ]]; then
-  if [[ $httpd_modules_for_instrumentation != '' || $custom_httpd_conf != 'false' || $custom_docroot != 'false' ]]; then
-    echo "ERROR: -a || -f || -d Flags Can Only be Used with -m master"
+  if [[ $httpd_modules_for_instrumentation != '' || $custom_docroot != 'false' || $custom_httpd_conf != 'false' || $nuke_multi_sync != 'false' ]]; then
+    echo 'ERROR: -a || -d || -f || -n Flags Can Only be Used with "-m master"'
     usage
   fi
 fi
