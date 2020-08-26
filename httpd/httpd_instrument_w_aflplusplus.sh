@@ -22,8 +22,46 @@ fi
 
 apt update
 apt full-upgrade -y
-apt install -y subversion libssl-dev pkg-config strace netstat-nat net-tools apt-file tcpdump lsof psmisc
+apt install -y subversion libssl-dev pkg-config strace netstat-nat net-tools apt-file tcpdump lsof psmisc logrotate
 
+# Configure logrotate to rotate logs every hour
+mkdir /etc/logrotate.hourly.d
+echo 'include /etc/logrotate.hourly.d' > /etc/logrotate.hourly.conf
+chmod 644 /etc/logrotate.hourly.conf
+
+cat << EOF | sudo tee /etc/cron.hourly/logrotate
+#!/bin/bash
+test -x /usr/sbin/logrotate || exit 0
+/usr/sbin/logrotate /etc/logrotate.hourly.conf
+EOF
+
+chmod 775 /etc/cron.hourly/logrotate
+
+cat << EOF | sudo tee /etc/logrotate.hourly.d/httpd
+${httpd_prefix}/logs/access_log {
+  size 128M
+  rotate 1
+  copytruncate
+  missingok
+  notifempty
+  nocreate
+  nomail
+}
+
+${httpd_prefix}/logs/error_log {
+  size 128M
+  rotate 1
+  copytruncate
+  missingok
+  notifempty
+  nocreate
+  nomail
+}
+EOF
+
+/etc/init.d/cron start
+
+# Okay, now let's instrument httpd...
 httpd_repo_root=`dirname ${httpd_repo}`
 httpd_repo_name=`basename ${httpd_repo}`
 
