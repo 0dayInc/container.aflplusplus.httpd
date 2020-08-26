@@ -31,6 +31,5 @@ ln -s /lib/x86_64-linux-gnu/security /lib/security
 
 # Overwrite Default httpd.conf w/ One that Support Basic AuthN
 mod_fastcgi_httpd_conf="${docker_repo_root}/mod_fastcgi/mod_fastcgi_httpd.conf"
-wget $mod_fastcgi_httpd_conf_uri
 cp $httpd_prefix/conf/httpd.conf $httpd_prefix/conf/httpd.conf.ORIG
 cp $mod_fastcgi_httpd_conf $httpd_prefix/conf/httpd.conf
