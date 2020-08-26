@@ -196,9 +196,9 @@ case $afl_mode in
         --privileged \
         --rm \
         --name aflplusplus.httpd.$RANDOM \
-        --mount type=bind,source=$fuzz_session_root/htdocs,target=$httpd_repo/BINROOT/htdocs \
         --mount type=bind,source=`dirname ${repo_root}`,target=/opt \
         --mount type=bind,source=$fuzz_session_root,target=$fuzz_session_root \
+        --mount type=bind,source=$fuzz_session_root/htdocs,target=$httpd_repo/BINROOT/htdocs \
         --interactive \
         --tty aflplusplus/aflplusplus \
         /bin/bash --login \
