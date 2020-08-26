@@ -24,9 +24,11 @@ To check out the requests being made by afl++:
 $ docker exec -it $(docker ps -a | grep aflplusplus.httpd | awk '{ print $NF}') tail -f /fuzz_session/httpd/BINROOT/logs/access_log
 ```
 
-Apache log files (access_log and error_log) are rotated every minute (fills up fast w/ multiple cores fuzzing ~ 1000 - 3000 HTTP reuqest mutations / second / core.
+Apache log files (access_log and error_log) are rotated every minute (fills up logs fast when fuzzing w/ multiple cores ~ 1000-3000 HTTP mutated requests / second / core.
 
 
 If you want a custom httpd.conf file, use -f flag to enable reading /fuzz_session/httpd.conf
 
 If you want a custom DOCROOT, use -d flag to enable /fuzz_session/htdocs for your custom application
+
+Place any additional test cases of your choosing in userland/test_cases and they'll be copied into /fuzz_session/AFLplusplus/input

@@ -83,6 +83,7 @@ docker_repo_root="/opt/${repo_name}"
 
 fuzz_session_root='/fuzz_session'
 httpd_test_cases="${repo_root}/httpd/test_cases"
+userland_test_cases="${repo_root}/userland/test_cases"
 
 afl_session_root="${fuzz_session_root}/AFLplusplus"
 afl_input="${afl_session_root}/input"
@@ -123,6 +124,7 @@ fi
 
 # Copy httpd Test Cases to $afl_input Folder
 cp $httpd_test_cases/* $afl_input
+cp $userland_test_cases/* $afl_input
 
 # Set ADL Mode
 if [[ $afl_mode == 'master' ]]; then

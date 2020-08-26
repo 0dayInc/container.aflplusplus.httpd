@@ -2,3 +2,5 @@
 *.swp
 **/screenlog.*
 .DS_Store
+userland/test_cases/*
+!userland/test_cases/.gitkeep
