@@ -33,6 +33,7 @@ chmod 644 /etc/logrotate.minute.conf
 cat << EOF | tee $logrotate_script
 #!/bin/bash --login
 /usr/sbin/logrotate /etc/logrotate.minute.conf
+rm /fuzz_session/httpd/BINROOT/logs/*_log.1
 EOF
 chmod 775 $logrotate_script
 
