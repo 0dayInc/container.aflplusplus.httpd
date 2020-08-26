@@ -10,13 +10,14 @@ usage() {
     -a <mod_auth_pam,...> # OPTIONAL / master MODE ONLY
                           # Comma-delimited httpd Modules to Instrument
 
-    -f <httpd.conf>       # OPTIONAL / master MODE ONLY
-                          # Path to custom httpd.conf file
+    -f                    # OPTIONAL / master MODE ONLY
+                          # Enable custom httpd.conf file
                           # for more advanced httpd mockups
+                          # Resides in /fuzz_session/httpd.conf
 
-    -d <docroot path>     # OPTIONAL / master MODE ONLY
-                          # Path to custom Apache
-                          # Document Root (Web Root)
+    -d                    # OPTIONAL / master MODE ONLY
+                          # Enable Custom Apache Document Root
+                          # Resides in /fuzz_session/htdocs
 
     -n                    # OPTIONAL
                           # Nuke contents of multi-sync (New afl++ Session)
@@ -37,20 +38,20 @@ list_supported_httpd_modules_to_instrument() {
 }
 
 no_args='true'
-custom_httpd_conf=''
-custom_docroot=''
+custom_httpd_conf='false'
+custom_docroot='false'
 afl_mode=''
 httpd_modules_for_instrumentation=''
 nuke_multi_sync='false'
 
-while getopts "hm:a:f:d:nL" flag; do
+while getopts "hm:a:fdnL" flag; do
   case $flag in
     'h') usage;;
     'm') afl_mode="${OPTARG}";;
     'a') httpd_modules_for_instrumentation="${OPTARG}";;
     'n') nuke_multi_sync='true';;
-    'f') custom_httpd_conf="${OPTARG}";;
-    'd') custom_docroot="${OPTARG}";;
+    'f') custom_httpd_conf='true';;
+    'd') custom_docroot='true';;
     'L') list_supported_httpd_modules_to_instrument;;
     *) usage;;
   esac
@@ -63,7 +64,7 @@ if [[ $no_args == 'true' ]]; then
 fi
 
 if [[ $afl_mode != 'master' ]]; then
-  if [[ $httpd_modules_for_instrumentation != '' || $httpd_modules_for_instrumentation != '' || $custom_docroot != '' ]]; then
+  if [[ $httpd_modules_for_instrumentation != '' || $custom_httpd_conf != 'false' || $custom_docroot != 'false' ]]; then
     echo "ERROR: -a || -f || -d Flags Can Only be Used with -m master"
     usage
   fi
@@ -82,16 +83,19 @@ afl_output="${afl_session_root}/multi_sync"
 
 httpd_repo="${fuzz_session_root}/httpd"
 
-if [[ $custom_httpd_conf == '' ]]; then
-  target_binary="${httpd_repo}/BINROOT/bin/httpd -X"
-else
-  target_binary="${httpd_repo}/BINROOT/bin/httpd -X -f ${custom_httpd_conf}"
-fi
-
+# Ensure folder conventions are intact
 if [[ ! -d $afl_session_root ]]; then
   mkdir $afl_session_root
   sudo chmod 777 $afl_session_root
   sudo mount -t tmpfs -o exec,nosuid,nodev,noatime,mode=1777,size=2G tmpfs $afl_session_root
+fi
+
+if [[ ! -d $fuzz_session_root/htdocs ]]; then
+  mkdir $fuzz_session_root/htdocs
+fi
+
+if [[ ! -f $fuzz_session_root/httpd.conf ]]; then
+  touch $fuzz_session_root/httpd.conf
 fi
 
 if [[ ! -d $afl_input ]]; then
@@ -99,9 +103,16 @@ if [[ ! -d $afl_input ]]; then
   sudo chmod 777 $afl_input
 fi
 
-# Update $afl_input w/ httpd Test Cases
+if [[ $custom_httpd_conf == 'false' ]]; then
+  target_binary="${httpd_repo}/BINROOT/bin/httpd -X"
+else
+  target_binary="${httpd_repo}/BINROOT/bin/httpd -X -f ${fuzz_session_root}/httpd.conf"
+fi
+
+# Copy httpd Test Cases to $afl_input Folder
 cp $httpd_test_cases/* $afl_input
 
+# Set ADL Mode
 if [[ $afl_mode == 'master' ]]; then
   afl_mode_selection='-M httpd1'
 else
@@ -110,6 +121,7 @@ else
   afl_mode_selection="-S httpd${RANDOM}"
 fi
 
+# Initialize Fuzz Session
 fuzz_session_init="
   echo core > /proc/sys/kernel/core_pattern &&
   export AFL_AUTORESUME=1 &&
@@ -166,7 +178,7 @@ case $afl_mode in
     
     # Instrument & Run Master
     sudo sysctl -w kernel.unprivileged_userns_clone=1
-    if [[ $custom_docroot == '' ]]; then
+    if [[ $custom_docroot == 'false' ]]; then
       docker run \
         --privileged \
         --rm \
@@ -182,7 +194,7 @@ case $afl_mode in
         --privileged \
         --rm \
         --name aflplusplus.httpd.$RANDOM \
-        --mount type=bind,source=$custom_docroot,target=$httpd_repo/BINROOT/htdocs \
+        --mount type=bind,source=$fuzz_session_root/htdocs,target=$httpd_repo/BINROOT/htdocs \
         --mount type=bind,source=`dirname ${repo_root}`,target=/opt \
         --mount type=bind,source=$fuzz_session_root,target=$fuzz_session_root \
         --interactive \
