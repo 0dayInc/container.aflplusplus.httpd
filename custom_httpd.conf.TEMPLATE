@@ -63,7 +63,6 @@ Listen 80
 # Example:
 # LoadModule foo_module modules/mod_foo.so
 #
-LoadModule auth_pam_module modules/mod_auth_pam.so
 LoadModule authn_file_module modules/mod_authn_file.so
 #LoadModule authn_dbm_module modules/mod_authn_dbm.so
 #LoadModule authn_anon_module modules/mod_authn_anon.so
@@ -250,11 +249,7 @@ DocumentRoot "${DOCROOT}"
     #
     # Require all granted
     
-    AuthType Basic
-    AuthName "MOD_AUTH_PAM"
-    AuthPAM_Enabled on
-    Require valid-user
-
+    Require all granted
 </Directory>
 
 #
