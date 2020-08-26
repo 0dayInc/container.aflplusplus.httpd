@@ -31,6 +31,5 @@ ln -s /lib/x86_64-linux-gnu/security /lib/security
 
 # Overwrite Default httpd.conf w/ One that Support Basic AuthN
 mod_auth_pam_httpd_conf="${docker_repo_root}/mod_auth_pam/mod_auth_pam_httpd.conf"
-wget $mod_auth_pam_httpd_conf_uri
 cp $httpd_prefix/conf/httpd.conf $httpd_prefix/conf/httpd.conf.ORIG
 cp $mod_auth_pam_httpd_conf $httpd_prefix/conf/httpd.conf
