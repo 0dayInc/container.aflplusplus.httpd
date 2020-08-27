@@ -31,9 +31,7 @@ usage() {
 
 list_supported_httpd_modules_to_instrument() {
   echo "List of Supported httpd Modules to Instrument:
-    mod_auth_pam,
-    mod_fastcgi (PENDING),
-    modsecurity (PENDING)
+    mod_auth_pam
   "
   exit 0
 }
@@ -105,8 +103,8 @@ fi
 target_binary="${httpd_prefix}/bin/httpd -X"
 
 # Copy httpd && userland Test Cases to $afl_input Folder
-cp $httpd_test_cases/* $afl_input
-cp $userland_test_cases/* $afl_input
+cp $httpd_test_cases/* $afl_input 2> /dev/null
+cp $userland_test_cases/* $afl_input 2> /dev/null
 
 # Set ADL Mode
 if [[ $afl_mode == 'master' ]]; then
@@ -138,23 +136,16 @@ case $afl_mode in
         'mod_auth_pam')
           echo "Instrumenting ${httpd_module}!"
           mod_auth_pam_test_cases="${this_repo_root}/mod_auth_pam/test_cases"
-          cp $mod_auth_pam_test_cases/* $afl_input
+          cp $mod_auth_pam_test_cases/* $afl_input 2> /dev/null
           afl_instrument_mod_auth_pam="${docker_repo_root}/mod_auth_pam/mod_auth_pam_instrument_w_aflplusplus.sh"
           afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${afl_instrument_mod_auth_pam} &&"
           ;;
         'mod_fastcgi') 
           echo "Instrumenting ${httpd_module}!"
           mod_fastcgi_test_cases="${this_repo_root}/mod_fastcgi/test_cases"
-          cp $mod_fastcgi_test_cases/* $afl_input
+          cp $mod_fastcgi_test_cases/* $afl_input 2> /dev/null
           afl_instrument_mod_fastcgi="${docker_repo_root}/mod_fastcgi/mod_fastcgi_instrument_w_aflplusplus.sh"
           afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${afl_instrument_mod_fastcgi} &&"
-          ;;
-        'mod_ssl')
-          echo "Instrumenting ${httpd_module}!"
-          mod_ssl_test_cases="${this_repo_root}/mod_ssl/test_cases"
-          cp $mod_ssl_test_cases/* $afl_input
-          afl_instrument_mod_ssl="${docker_repo_root}/mod_ssl/mod_ssl_instrument_w_aflplusplus.sh"
-          afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${afl_instrument_mod_ssl} &&"
           ;;
         *) echo "Invalid httpd_module ${httpd_module}"
            echo 'Use -L to list modules supported.'
@@ -184,7 +175,7 @@ case $afl_mode in
       --privileged \
       --rm \
       --name aflplusplus.httpd.$RANDOM \
-      --mount type=bind,source=`dirname ${repo_root}`,target=/opt \
+      --mount type=bind,source=`dirname ${this_repo_root}`,target=/opt \
       --mount type=bind,source=$fuzz_session_root,target=$fuzz_session_root \
       --interactive \
       --tty aflplusplus/aflplusplus \
