@@ -2,5 +2,7 @@
 *.swp
 **/screenlog.*
 .DS_Store
+userland/conf/*
+userland/htdocs/*
 userland/test_cases/*
-!userland/test_cases/.gitkeep
+!userland/**/.gitkeep
