@@ -1,10 +1,10 @@
---- server/main.c  2020-08-12 14:57:23.315369740 -0600
-+++ server/main.FUZZ.c  2020-08-12 15:25:08.656783976 -0600
-@@ -24,6 +24,29 @@
- #include "apr_version.h"
- #include "apu_version.h"
+--- main.c  2020-08-27 09:11:38.036097854 -0600
++++ main.FUZZ.c  2020-08-27 09:38:24.816020578 -0600
+@@ -14,6 +14,29 @@
+  * limitations under the License.
+  */
  
-+// AFL
++// AFL++ SNIP
 +#include <sched.h>
 +#include <linux/sched.h>
 +#include <arpa/inet.h>
@@ -25,28 +25,16 @@
 +#include <sys/types.h>
 +#include <sys/wait.h>
 +#include <unistd.h>
-+// AFL EOB
++// AFL++ EOS
 +
- #define APR_WANT_STDIO
- #define APR_WANT_STRFUNC
- #include "apr_want.h"
-@@ -419,6 +442,11 @@
-     ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
-                  "  -c \"directive\"     : process directive after reading "
-                  "config files");
-+    // AFL
-+    ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
-+                 "  -F                   : mutated AFL file to read as request "
-+                 "");
-+    // AFL EOB
- 
- #ifdef NETWARE
-     ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
-@@ -485,19 +513,215 @@
+ #include "apr.h"
+ #include "apr_strings.h"
+ #include "apr_getopt.h"
+@@ -485,19 +508,141 @@
      destroy_and_exit_process(process, 1);
  }
  
-+// AFL
++// AFL++ SNIP
 +static void netIfaceUp(const char *ifacename)
 +{
 +    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
@@ -77,73 +65,7 @@
 +void unsh(void)
 +{
 +    unshare(CLONE_NEWUSER | CLONE_NEWNET | CLONE_NEWNS);
-+
-+    //if (mount("tmpfs", "/tmp", "tmpfs", 0, "") == -1) {
-+    //    perror("tmpfs");
-+    //    _exit(1);
-+    //}
-+
 +    netIfaceUp("lo");
-+}
-+
-+static void SENDFILE(char *buf)
-+{
-+    if (buf == NULL){
-+        printf("[-] buf is NULL\n");
-+        perror("buf");
-+    }
-+    usleep(1000);
-+    long fsize = strlen(buf);
-+    for (;;) {
-+        printf("[+] Looping\n");
-+        //printf("[+] Read ->  %s <- from in file \n", buf);
-+
-+        int myfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-+        if (myfd == -1) {
-+            printf("HORROR");
-+            perror("socket");
-+            _exit(1);
-+        }
-+
-+        int sz = (1024 * 1024);
-+        if (setsockopt(myfd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz)) == -1) {
-+            printf("HORROR");
-+            perror("setsockopt");
-+            exit(1);
-+        }
-+
-+        struct sockaddr_in saddr;
-+        saddr.sin_family = AF_INET;
-+        saddr.sin_port = htons(80);
-+        saddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-+        if (connect(myfd, &saddr, sizeof(saddr)) == -1) {
-+            printf("HORROR");
-+            perror("connect");
-+            continue;
-+            // If we can't connect we keep looping untill everything is ready
-+        }
-+
-+        if (send(myfd, buf, fsize, MSG_NOSIGNAL) != fsize) {
-+            printf("[+] Buf not sent %s\n", buf);
-+            printf("HORROR");
-+            perror("send() failed 1");
-+            exit(1);
-+        }
-+
-+
-+        if (shutdown(myfd, SHUT_WR) == -1) {
-+            perror("shutdown");
-+            exit(1);
-+        }
-+
-+        char b[1024 * 1024];
-+        while (recv(myfd, b, sizeof(b), MSG_WAITALL) > 0) ;
-+
-+        close(myfd);
-+        printf("[+] Nice run\n");
-+        usleep(500);
-+        exit(0);
-+    }
 +}
 +
 +static void GETDATA(process_rec *process)
@@ -151,14 +73,14 @@
 +    int BUFSIZE=1024*1024;
 +    usleep(10000);
 +    char buf[BUFSIZE+1];
-+    while ( __AFL_LOOP(10000)){
++    while ( __AFL_LOOP(30000) ){
 +        printf("[+] Looping\n");
 +        memset(buf, 0, BUFSIZE);
 +        size_t read_bytes = read(0, buf, BUFSIZE);
 +        buf[BUFSIZE-2] = '\r';
 +        buf[BUFSIZE-1] = '\n';
 +        buf[BUFSIZE] = '\0';
-+        
++
 +        int sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 +        if (sockfd == -1) {
 +            perror("socket");
@@ -222,7 +144,7 @@
 +
 +    pthread_create(&t, &attr, GETDATA, process);
 +}
-+// AFL EOB
++// AFL++ EOS
 +
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
@@ -230,15 +152,7 @@
   int main(int argc, const char *const *argv)
  #endif
  {
-+    // AFL
-+    const char *finput = NULL;
-+    for (int i = 0; i < argc; i++){
-+        if (strcmp(argv[i],"-F")==0){
-+            finput = argv[i+1];
-+            break;
-+        }
-+    }
-+
++    // AFL++ SNIP
 +    process_rec *process; // Needed to finish apache
 +    if (getenv("NO_FUZZ") == NULL) {
 +        unsh();
@@ -246,7 +160,7 @@
 +        printf("[+] Launched loop\n");
 +    }
 +    printf("[+] I did follow\n");
-+    // AFL EOB
++    // AFL++ EOS
 +
      char c;
      int showcompile = 0, showdirectives = 0;
@@ -259,21 +173,26 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +966,8 @@
+@@ -742,7 +887,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
 -        destroy_and_exit_process(process, 1);
++        // AFL++ SNIP
++        //destroy_and_exit_process(process, 1);
 +        printf("[-] Config failed...\n");
 +        destroy_and_exit_process(process, 0);
++        // AFL++ EOS
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +975,7 @@
+@@ -750,6 +899,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
++            // AFL++ SNIP
 +            printf("[-] Server signaled out\n");
++            // AFL++ EOS
              destroy_and_exit_process(process, exit_status);
          }
      }
