@@ -26,5 +26,5 @@ git clone $fastcgi_github
 # Instrument mod_fastcgi
 cd ${mod_fastcgi_repo}
 cp Makefile.AP2 Makefile
-CC=$preferred_afl CXX=$preferred_aflplusplus make top_dir=$httpd_prefix
+CC=$preferred_afl CXX=$preferred_aflplusplus make top_dir=$httpd_repo
 make install
