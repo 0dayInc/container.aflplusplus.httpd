@@ -17,7 +17,7 @@ mod_auth_pam_tar_gz='mod_auth_pam-2.0-1.1.1.tar.gz'
 mod_auth_pam_uri="http://pam.sourceforge.net/mod_auth_pam/dist/${mod_auth_pam_tar_gz}"
 httpd_repo="${fuzz_session_root}/httpd_src"
 httpd_prefix="${fuzz_session_root}/httpd"
-mod_auth_pam_repo="${httpd_repo}/mod_auth_pam"
+mod_auth_pam_repo="${httpd_repo}/modules/mod_auth_pam"
 repo_name=`basename ${mod_auth_pam_repo}`
 
 cd $httpd_repo && wget $mod_auth_pam_uri && tar -xzvf $mod_auth_pam_tar_gz
