@@ -31,7 +31,8 @@ usage() {
 
 list_supported_httpd_modules_to_instrument() {
   echo "List of Supported httpd Modules to Instrument:
-    mod_auth_pam
+    mod_auth_pam,
+    mod_fastcgi
   "
   exit 0
 }
