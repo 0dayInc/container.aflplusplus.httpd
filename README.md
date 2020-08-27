@@ -14,7 +14,7 @@ To add another CPU core into the fuzzing mix, open a new terminal window:
 $ ./AFLplusplus_httpd_wrapper.sh -m slave
 ```
 
-To check out the requests being made by afl++ within the master Container:
+To check out the mutated HTTP requests being made by afl++ within the master Container:
 ```
 $ docker exec -it $(docker ps -a | grep aflplusplus.httpd | awk '{ print $NF}') tail -f /fuzz_session/httpd/logs/access_log
 ```
