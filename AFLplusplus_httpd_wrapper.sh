@@ -32,7 +32,8 @@ usage() {
 list_supported_httpd_modules_to_instrument() {
   echo "List of Supported httpd Modules to Instrument:
     mod_auth_pam,
-    mod_fastcgi
+    mod_fastcgi,
+    modsecurity
   "
   exit 0
 }
@@ -146,6 +147,13 @@ case $afl_mode in
           cp $mod_fastcgi_test_cases/* $afl_input 2> /dev/null
           afl_instrument_mod_fastcgi="${docker_repo_root}/mod_fastcgi/mod_fastcgi_instrument_w_aflplusplus.sh"
           afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${afl_instrument_mod_fastcgi} &&"
+          ;;
+        'modsecurity') 
+          echo "Instrumenting ${httpd_module}!"
+          modsecurity_test_cases="${this_repo_root}/modsecurity/test_cases"
+          cp $modsecurity_test_cases/* $afl_input 2> /dev/null
+          afl_instrument_modsecurity="${docker_repo_root}/modsecurity/modsecurity_instrument_w_aflplusplus.sh"
+          afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${afl_instrument_modsecurity} &&"
           ;;
         *) echo "Invalid httpd_module ${httpd_module}"
            echo 'Use -L to list modules supported.'
