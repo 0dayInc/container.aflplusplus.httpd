@@ -15,21 +15,18 @@ afl_output="${afl_session_root}/multi_sync"
 
 mod_auth_pam_tar_gz='mod_auth_pam-2.0-1.1.1.tar.gz'
 mod_auth_pam_uri="http://pam.sourceforge.net/mod_auth_pam/dist/${mod_auth_pam_tar_gz}"
-httpd_repo="${fuzz_session_root}/httpd"
-httpd_prefix="${httpd_repo}/BINROOT"
-mod_auth_pam_repo="${httpd_repo}/mod_auth_pam"
+httpd_repo="${fuzz_session_root}/httpd_src"
+httpd_prefix="${fuzz_session_root}/httpd"
+mod_auth_pam_repo="${httpd_prefix}/mod_auth_pam"
 repo_name=`basename ${mod_auth_pam_repo}`
 
 cd $httpd_repo && wget $mod_auth_pam_uri && tar -xzvf $mod_auth_pam_tar_gz
 
 # Instrument mod_auth_pam
-export PATH=$PATH:${httpd_prefix}/bin
 apt install -y libpam0g-dev
-cd ${mod_auth_pam_repo} && CC=$preferred_afl CXX=$preferred_aflplusplus make && make install
+export PATH=$PATH:${httpd_prefix}/bin
+cd ${mod_auth_pam_repo}
+CC=$preferred_afl CXX=$preferred_aflplusplus make
+make install
 # This symlink is to properly reference absolute path of pam_unix.so found in /etc/pam.d/httpd
 ln -s /lib/x86_64-linux-gnu/security /lib/security
-
-# Overwrite Default httpd.conf w/ One that Support Basic AuthN
-mod_auth_pam_httpd_conf="${docker_repo_root}/mod_auth_pam/mod_auth_pam_httpd.conf"
-cp $httpd_prefix/conf/httpd.conf $httpd_prefix/conf/httpd.conf.ORIG
-cp $mod_auth_pam_httpd_conf $httpd_prefix/conf/httpd.conf

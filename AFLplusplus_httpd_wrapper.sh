@@ -11,16 +11,9 @@ usage() {
                           # Comma-delimited httpd 3rd
                           # Party Modules to Instrument
 
-    -d                    # OPTIONAL / master MODE ONLY
-                          # Enable Custom Apache Document Root
-                          # Resides in /fuzz_session/htdocs
-                          # which is tmpfs and LOST AFTER REBOOT
-                          # OF HOST OS
-
-    -f                    # OPTIONAL / master MODE ONLY
-                          # Enable custom httpd.conf file
-                          # for more advanced httpd mockups
-                          # Resides in /fuzz_session/httpd.conf
+    -c                    # OPTIONAL / master MODE ONLY
+                          # Nuke contents of httpd prefix
+                          # Resides in /fuzz_session/httpd
                           # which is tmpfs and LOST AFTER REBOOT
                           # OF HOST OS
 
@@ -39,26 +32,25 @@ usage() {
 list_supported_httpd_modules_to_instrument() {
   echo "List of Supported httpd Modules to Instrument:
     mod_auth_pam,
-    mod_fastcgi
+    mod_fastcgi (PENDING),
+    modsecurity (PENDING)
   "
   exit 0
 }
 
 no_args='true'
-custom_httpd_conf='false'
-custom_docroot='false'
 afl_mode=''
 httpd_modules_for_instrumentation=''
+nuke_httpd_prefix='false'
 nuke_multi_sync='false'
 
-while getopts "hm:a:fdnL" flag; do
+while getopts "hm:a:cnL" flag; do
   case $flag in
     'h') usage;;
     'm') afl_mode="${OPTARG}";;
     'a') httpd_modules_for_instrumentation="${OPTARG}";;
+    'c') nuke_httpd_prefix='true';;
     'n') nuke_multi_sync='true';;
-    'f') custom_httpd_conf='true';;
-    'd') custom_docroot='true';;
     'L') list_supported_httpd_modules_to_instrument;;
     *) usage;;
   esac
@@ -71,25 +63,26 @@ if [[ $no_args == 'true' ]]; then
 fi
 
 if [[ $afl_mode != 'master' ]]; then
-  if [[ $httpd_modules_for_instrumentation != '' || $custom_docroot != 'false' || $custom_httpd_conf != 'false' || $nuke_multi_sync != 'false' ]]; then
-    echo 'ERROR: -a || -d || -f || -n Flags Can Only be Used with "-m master"'
+  if [[ $httpd_modules_for_instrumentation != '' $nuke_httpd_prefix != 'false' || $nuke_multi_sync != 'false' ]]; then
+    echo 'ERROR: -a || -c || -n Flags Can Only be Used with "-m master"'
     usage
   fi
 fi
 
-repo_root=$(pwd)
-repo_name=`basename ${repo_root}`
-docker_repo_root="/opt/${repo_name}"
+this_repo_root=$(pwd)
+this_repo_name=`basename ${this_repo_root}`
+docker_repo_root="/opt/${this_repo_name}"
 
 fuzz_session_root='/fuzz_session'
-httpd_test_cases="${repo_root}/httpd/test_cases"
-userland_test_cases="${repo_root}/userland/test_cases"
+httpd_test_cases="${this_repo_root}/httpd/test_cases"
+userland_test_cases="${this_repo_root}/userland/test_cases"
 
 afl_session_root="${fuzz_session_root}/AFLplusplus"
 afl_input="${afl_session_root}/input"
 afl_output="${afl_session_root}/multi_sync"
 
-httpd_repo="${fuzz_session_root}/httpd"
+httpd_repo="${fuzz_session_root}/httpd_src"
+httpd_prefix="${fuzz_session_root}/httpd"
 
 # Ensure folder conventions are intact
 if [[ ! -d $fuzz_session_root ]]; then
@@ -103,24 +96,13 @@ if [[ ! -d $afl_session_root ]]; then
   sudo chmod 777 $afl_session_root
 fi
 
-if [[ ! -d $fuzz_session_root/htdocs ]]; then
-  mkdir $fuzz_session_root/htdocs
-fi
-
-if [[ ! -f $fuzz_session_root/httpd.conf ]]; then
-  cp $repo_root/custom_httpd.conf.TEMPLATE $fuzz_session_root/httpd.conf
-fi
-
 if [[ ! -d $afl_input ]]; then
   mkdir $afl_input
   sudo chmod 777 $afl_input
 fi
 
-if [[ $custom_httpd_conf == 'false' ]]; then
-  target_binary="${httpd_repo}/BINROOT/bin/httpd -X"
-else
-  target_binary="${httpd_repo}/BINROOT/bin/httpd -X -f ${fuzz_session_root}/httpd.conf"
-fi
+#if [[ $custom_httpd_conf == 'false' ]]; then
+target_binary="${httpd_prefix}/bin/httpd -X"
 
 # Copy httpd && userland Test Cases to $afl_input Folder
 cp $httpd_test_cases/* $afl_input
@@ -155,21 +137,21 @@ case $afl_mode in
       case $httpd_module in 
         'mod_auth_pam')
           echo "Instrumenting ${httpd_module}!"
-          mod_auth_pam_test_cases="${repo_root}/mod_auth_pam/test_cases"
+          mod_auth_pam_test_cases="${this_repo_root}/mod_auth_pam/test_cases"
           cp $mod_auth_pam_test_cases/* $afl_input
           afl_instrument_mod_auth_pam="${docker_repo_root}/mod_auth_pam/mod_auth_pam_instrument_w_aflplusplus.sh"
           afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${afl_instrument_mod_auth_pam} &&"
           ;;
         'mod_fastcgi') 
           echo "Instrumenting ${httpd_module}!"
-          mod_fastcgi_test_cases="${repo_root}/mod_fastcgi/test_cases"
+          mod_fastcgi_test_cases="${this_repo_root}/mod_fastcgi/test_cases"
           cp $mod_fastcgi_test_cases/* $afl_input
           afl_instrument_mod_fastcgi="${docker_repo_root}/mod_fastcgi/mod_fastcgi_instrument_w_aflplusplus.sh"
           afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${afl_instrument_mod_fastcgi} &&"
           ;;
         'mod_ssl')
           echo "Instrumenting ${httpd_module}!"
-          mod_ssl_test_cases="${repo_root}/mod_ssl/test_cases"
+          mod_ssl_test_cases="${this_repo_root}/mod_ssl/test_cases"
           cp $mod_ssl_test_cases/* $afl_input
           afl_instrument_mod_ssl="${docker_repo_root}/mod_ssl/mod_ssl_instrument_w_aflplusplus.sh"
           afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${afl_instrument_mod_ssl} &&"
@@ -179,6 +161,12 @@ case $afl_mode in
            usage;; 
       esac
     done
+
+    # Nuke contents of httpd Prefix
+    # if -c was passed as arg
+    if [[ -d $httpd_prefix && $nuke_httpd_prefix == 'true' ]]; then
+      sudo rm -rf $afl_output
+    fi
 
     # Nuke contents of multi-sync (New afl++ Session)
     # if -n was passed as arg
@@ -192,29 +180,16 @@ case $afl_mode in
     
     # Instrument & Run Master
     sudo sysctl -w kernel.unprivileged_userns_clone=1
-    if [[ $custom_docroot == 'false' ]]; then
-      docker run \
-        --privileged \
-        --rm \
-        --name aflplusplus.httpd.$RANDOM \
-        --mount type=bind,source=`dirname ${repo_root}`,target=/opt \
-        --mount type=bind,source=$fuzz_session_root,target=$fuzz_session_root \
-        --interactive \
-        --tty aflplusplus/aflplusplus \
-        /bin/bash --login \
-        -c "${afl_instrument_and_fuzz_session_init}"
-    else
-      docker run \
-        --privileged \
-        --rm \
-        --name aflplusplus.httpd.$RANDOM \
-        --mount type=bind,source=`dirname ${repo_root}`,target=/opt \
-        --mount type=bind,source=$fuzz_session_root,target=$fuzz_session_root \
-        --interactive \
-        --tty aflplusplus/aflplusplus \
-        /bin/bash --login \
-        -c "${afl_instrument_and_fuzz_session_init}"
-    fi
+    docker run \
+      --privileged \
+      --rm \
+      --name aflplusplus.httpd.$RANDOM \
+      --mount type=bind,source=`dirname ${repo_root}`,target=/opt \
+      --mount type=bind,source=$fuzz_session_root,target=$fuzz_session_root \
+      --interactive \
+      --tty aflplusplus/aflplusplus \
+      /bin/bash --login \
+      -c "${afl_instrument_and_fuzz_session_init}"
     sudo sysctl -w kernel.unprivileged_userns_clone=0
     ;;
 
