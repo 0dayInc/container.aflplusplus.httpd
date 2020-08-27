@@ -13,8 +13,8 @@ afl_session_root="${fuzz_session_root}/AFLplusplus"
 afl_input="${afl_session_root}/input"
 afl_output="${afl_session_root}/multi_sync"
 
-httpd_repo="${fuzz_session_root}/httpd"
-httpd_prefix="${httpd_repo}/BINROOT"
+httpd_repo="${fuzz_session_root}/httpd_src"
+httpd_prefix="${fuzz_session_root}/httpd"
 
 if [[ -d $httpd_repo ]]; then
   rm -rf $httpd_repo
@@ -33,7 +33,7 @@ chmod 644 /etc/logrotate.minute.conf
 cat << EOF | tee $logrotate_script
 #!/bin/bash --login
 /usr/sbin/logrotate /etc/logrotate.minute.conf
-rm /fuzz_session/httpd/BINROOT/logs/*_log.1
+rm ${httpd_prefix}/logs/*_log.1
 EOF
 chmod 775 $logrotate_script
 

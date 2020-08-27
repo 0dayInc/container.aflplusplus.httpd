@@ -17,8 +17,8 @@ github_root='https://github.com/FastCGI-Archives/FastCGI.com/raw/master/original
 mod_fastcgi_tar_gz='mod_fastcgi-SNAP-0910052141.tar.gz'
 mod_fastcgi_uri="${github_root}/${mod_fastcgi_tar_gz}"
 
-httpd_repo="${fuzz_session_root}/httpd"
-httpd_prefix="${httpd_repo}/BINROOT"
+httpd_repo="${fuzz_session_root}/httpd_src"
+httpd_prefix="${fuzz_session_root}/httpd"
 mod_fastcgi_repo="${httpd_repo}/mod_fastcgi-SNAP-0910052141"
 repo_name=`basename ${mod_fastcgi_repo}`
 
