@@ -13,19 +13,19 @@ afl_session_root="${fuzz_session_root}/AFLplusplus"
 afl_input="${afl_session_root}/input"
 afl_output="${afl_session_root}/multi_sync"
 
-mod_fastcgi_github='https://github.com/FastCGI-Archives/mod_fastcgi'
+modsecurity_github='https://github.com/SpiderLabs/ModSecurity'
 
 httpd_repo="${fuzz_session_root}/httpd_src"
 httpd_prefix="${fuzz_session_root}/httpd"
-mod_fastcgi_repo="${httpd_repo}/modules/mod_fastcgi"
-repo_name=`basename ${mod_fastcgi_repo}`
+modsecurity_repo="${httpd_repo}/modules/modsecurity"
+repo_name=`basename ${modsecurity_repo}`
 
-cd `dirname ${mod_fastcgi_repo}`
-git clone $mod_fastcgi_github
+cd `dirname ${modsecurity_repo}`
+git clone $fastcgi_github modsecurity
 
-# Instrument mod_fastcgi
-cd ${mod_fastcgi_repo}
-cp Makefile.AP2 Makefile
-sed -i 's/\/usr\/local\/apache2/\/fuzz_session\/httpd_src/g' Makefile
+# Instrument modsecurity
+cd ${modsecurity_repo}
+CC=$preferred_afl CXX=$preferred_aflplusplus ./build.sh
+CC=$preferred_afl CXX=$preferred_aflplusplus ./configure
 CC=$preferred_afl CXX=$preferred_aflplusplus make
 make install
