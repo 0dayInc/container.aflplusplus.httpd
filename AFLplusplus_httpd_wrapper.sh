@@ -99,7 +99,6 @@ if [[ ! -d $afl_input ]]; then
   sudo chmod 777 $afl_input
 fi
 
-#if [[ $custom_httpd_conf == 'false' ]]; then
 target_binary="${httpd_prefix}/bin/httpd -X"
 
 # Copy httpd && userland Test Cases to $afl_input Folder

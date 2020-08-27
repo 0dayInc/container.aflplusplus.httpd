@@ -27,9 +27,9 @@ $ tail -f /fuzz_session/httpd/logs/access_log
 Apache log files (access_log and error_log) are rotated every minute (fills up logs fast when fuzzing w/ multiple cores ~ 1000-3000 HTTP mutated requests / second / core.
 
 
-/fuzz_session/httpd/conf/httpd.conf can be configured and will persist between fuzz sessions, however, it is in /fuzz_session (i.e. tmpfs) and WILL BE LOST WHEN THE HOST OS IS REBOOTED...therefore backup your custom httpd.conf prior to rebooting your host OS.
+/fuzz_session/httpd/conf/httpd.conf can be configured and will persist between fuzz sessions, however, it is in /fuzz_session (i.e. tmpfs) and WILL BE LOST WHEN THE HOST OS IS REBOOTED...therefore backup your custom httpd.conf to ./userland/conf prior to rebooting your host OS.
 
-If you want to deploy your own custom application, the DOCROOT resides in /fuzz_session/httpd/htdocs.  It is also in /fuzz_session (i.e. tmpfs) and WILL BE LOST WHEN THE HOST OS IS REBOOTED...therefore backup your custom DOCROOT prior to rebooting your host OS.
+If you want to deploy your own custom application, the DOCROOT resides in /fuzz_session/httpd/htdocs.  It is also in /fuzz_session (i.e. tmpfs) and WILL BE LOST WHEN THE HOST OS IS REBOOTED...therefore backup your custom DOCROOT to ./userland/htdocs prior to rebooting your host OS.
 
 To add your own test cases, place them in ./userland/test_cases and they'll be copied into /fuzz_session/AFLplusplus/input.
 
