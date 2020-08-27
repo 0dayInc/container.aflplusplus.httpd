@@ -8,8 +8,8 @@ usage() {
                           # afl++ Mode 
 
     -a <mod_auth_pam,...> # OPTIONAL / master MODE ONLY
-                          # Comma-delimited httpd 3rd
-                          # Party Modules to Instrument
+                          # Comma-delimited list of 3rd
+                          # Party httpd Modules to Instrument
 
     -c                    # OPTIONAL / master MODE ONLY
                           # Nuke contents of httpd prefix
@@ -130,7 +130,7 @@ case $afl_mode in
     afl_instrument_httpd="${docker_repo_root}/httpd/httpd_instrument_w_aflplusplus.sh"
     afl_instrument_and_fuzz_session_init="${afl_instrument_httpd} &&"
 
-    delimit=',' read -r -a httpd_mod_arr <<< "$httpd_modules_for_instrumentation"
+    IFS=',' read -ar httpd_mod_arr <<< "${httpd_modules_for_instrumentation}"
     for httpd_module in "${httpd_mod_arr[@]}"; do
       case $httpd_module in 
         'mod_auth_pam')
