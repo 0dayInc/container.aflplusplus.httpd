@@ -20,7 +20,7 @@ httpd_prefix="${fuzz_session_root}/httpd"
 mod_auth_pam_repo="${httpd_repo}/modules/mod_auth_pam"
 repo_name=`basename ${mod_auth_pam_repo}`
 
-cd $httpd_repo && wget $mod_auth_pam_uri && tar -xzvf $mod_auth_pam_tar_gz
+cd `dirname ${mod_auth_pam_repo}` && wget $mod_auth_pam_uri && tar -xzvf $mod_auth_pam_tar_gz
 
 # Instrument mod_auth_pam
 apt install -y libpam0g-dev
