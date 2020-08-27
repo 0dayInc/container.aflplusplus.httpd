@@ -63,7 +63,7 @@ if [[ $no_args == 'true' ]]; then
 fi
 
 if [[ $afl_mode != 'master' ]]; then
-  if [[ $httpd_modules_for_instrumentation != '' $nuke_httpd_prefix != 'false' || $nuke_multi_sync != 'false' ]]; then
+  if [[ $httpd_modules_for_instrumentation != '' || $nuke_httpd_prefix != 'false' || $nuke_multi_sync != 'false' ]]; then
     echo 'ERROR: -a || -c || -n Flags Can Only be Used with "-m master"'
     usage
   fi
