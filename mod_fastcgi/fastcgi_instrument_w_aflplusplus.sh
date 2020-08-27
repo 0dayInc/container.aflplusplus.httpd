@@ -1,9 +1,11 @@
 #!/bin/bash --login
 # TODO: Get lto working
 #preferred_afl='afl-clang-lto'
-#preferred_aflplusplus='afl-clang-lto++'
-preferred_afl='afl-clang-fast'
-preferred_aflplusplus='afl-clang-fast++'
+#preferred_aflplusplus='afl-fast-clang-lto++'
+#preferred_afl='afl-clang'
+#preferred_aflplusplus='afl-fast-clang++'
+preferred_afl='afl-gcc'
+preferred_aflplusplus='afl-g++'
 
 docker_repo_root='/opt/container.aflplusplus.httpd'
 

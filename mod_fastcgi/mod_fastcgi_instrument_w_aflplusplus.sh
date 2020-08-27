@@ -2,8 +2,10 @@
 # TODO: Get lto working
 #preferred_afl='afl-clang-lto'
 #preferred_aflplusplus='afl-clang-lto++'
-preferred_afl='afl-clang-fast'
-preferred_aflplusplus='afl-clang-fast++'
+#preferred_afl='afl-clang-fast'
+#preferred_aflplusplus='afl-clang-fast++'
+preferred_afl='afl-gcc'
+preferred_aflplusplus='afl-g++'
 
 docker_repo_root='/opt/container.aflplusplus.httpd'
 
@@ -25,4 +27,7 @@ repo_name=`basename ${mod_fastcgi_repo}`
 cd $httpd_repo && wget $mod_fastcgi_uri && tar -xzvf $mod_fastcgi_tar_gz
 
 # Instrument mod_fastcgi
-cd ${mod_fastcgi_repo} && CC=$preferred_afl CXX=$preferred_aflplusplus make && make install
+cd ${mod_fastcgi_repo}
+cp Makefile.AP2 Makefile
+CC=$preferred_afl CXX=$preferred_aflplusplus make top_dir=$httpd_repo
+make install
