@@ -136,7 +136,7 @@ case $afl_mode in
     afl_instrument_httpd="${docker_repo_root}/httpd/httpd_instrument_w_aflplusplus.sh"
     afl_instrument_and_fuzz_session_init="${afl_instrument_httpd} &&"
 
-    IFS=',' read -ar httpd_mod_arr <<< "${httpd_modules_for_instrumentation}"
+    IFS=',' read -ra httpd_mod_arr <<< "${httpd_modules_for_instrumentation}"
     for httpd_module in "${httpd_mod_arr[@]}"; do
       case $httpd_module in 
         'mod_auth_pam')
