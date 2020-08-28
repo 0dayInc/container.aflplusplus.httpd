@@ -5,8 +5,14 @@
 preferred_afl='afl-clang-fast'
 preferred_aflplusplus='afl-clang-fast++'
 
-export AFL_AS='/usr/bin/afl-as'
-export AFL_USE_ASAN=1
+# TODO:
+#  export AFL_KEEP_ASSEMBLY=1 &&
+#  export AFL_HARDEN=1 &&
+#  export AFL_USE_ASAN=1 &&
+#  export AFL_USE_UBSAN=1 &&
+#  export AFL_USE_CFISAN=1 &&
+#export AFL_AS='/usr/bin/afl-as'
+#export AFL_USE_ASAN=1
 
 docker_repo_root='/opt/container.aflplusplus.httpd'
 
