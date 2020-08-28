@@ -23,11 +23,18 @@ if [[ -d $httpd_repo ]]; then
   rm -rf $httpd_repo
 fi
 
+# Initialize Docker Container w Tooling ----------------------------------#
 apt update
 apt full-upgrade -y
 apt install -y subversion libssl-dev pkg-config strace netstat-nat net-tools apt-file tcpdump lsof psmisc logrotate curl openssh-server git
 
-cd /opt && git clone https://gitlab.com/akihe/radamsa.git && cd radamsa && make && make install
+# Install Radamsa to Support -R flag in afl-fuzz
+# (i.e. Include Radamsa for test case mutation)
+cd /opt
+git clone https://gitlab.com/akihe/radamsa.git
+cd radamsa
+make
+make install
 
 # Configure logrotate to rotate logs every hour
 logrotate_script='/usr/local/sbin/logrotate.sh'
@@ -65,6 +72,7 @@ ${httpd_prefix}/logs/error_log {
 EOF
 (crontab -l 2>/dev/null; echo "* * * * * ${logrotate_script}") | crontab -
 /etc/init.d/cron start
+# EOI --------------------------------------------------------------------#
 
 # Okay, now let's instrument httpd...
 httpd_repo_root=`dirname ${httpd_repo}`

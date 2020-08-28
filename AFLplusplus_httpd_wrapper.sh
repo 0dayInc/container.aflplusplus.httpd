@@ -132,9 +132,9 @@ fi
 # Initialize Fuzz Session
 fuzz_session_init="
   echo core > /proc/sys/kernel/core_pattern &&
-  export AFL_SKIP_CPUFREQ=0 &&
   export AFL_AUTORESUME=1 &&
-  afl-fuzz ${afl_mode_selection} -T '0dayInc/container.aflplusplus.httpd' -R -C -i ${afl_session_root}/input -o ${afl_session_root}/multi_sync -m none -t 6000+ -- ${target_binary}
+  export AFL_SKIP_CPUFREQ=0 &&
+  afl-fuzz ${afl_mode_selection} -T '0dayInc/container.aflplusplus.httpd' -R -C -i ${afl_session_root}/input -o ${afl_session_root}/multi_sync -m 2048 -t 6000+ -- ${target_binary}
 "
 
 case $afl_mode in
