@@ -25,6 +25,9 @@ usage() {
 
     -L                    # OPTIONAL
                           # List supported httpd modules to instrument
+
+    -D                    # OPTIONAL
+                          # Enable Debugging
   "
   exit 1
 }
@@ -43,8 +46,9 @@ afl_mode=''
 httpd_modules_for_instrumentation=''
 nuke_httpd_prefix='false'
 nuke_multi_sync='false'
+debug='false'
 
-while getopts "hm:a:cnL" flag; do
+while getopts "hm:a:cnLD" flag; do
   case $flag in
     'h') usage;;
     'm') afl_mode="${OPTARG}";;
@@ -52,6 +56,7 @@ while getopts "hm:a:cnL" flag; do
     'c') nuke_httpd_prefix='true';;
     'n') nuke_multi_sync='true';;
     'L') list_supported_httpd_modules_to_instrument;;
+    'D') debug='true'
     *) usage;;
   esac
   no_args='false'
@@ -175,7 +180,17 @@ case $afl_mode in
 
     afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${fuzz_session_init}"
 
-    echo $afl_instrument_httpd_and_fuzz_session_init
+    if [[ $debug == 'true' ]]; then
+      echo 'Preparing to exec:'
+      echo -e "${afl_instrument_and_fuzz_session_init}\n\n\n"
+      while true; do
+        printf 'Proceed with Execution? <y||n>'; read answer
+        case $answer in
+          'y'|'Y') break;;
+          'n'|'N') echo 'Aborting Execution...Goodbye.'; exit 0;;
+        esac
+      done
+    fi
     
     # Instrument & Run Master
     sudo sysctl -w kernel.unprivileged_userns_clone=1
