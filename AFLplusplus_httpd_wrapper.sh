@@ -131,13 +131,21 @@ else
 fi
 
 # Initialize Fuzz Session
+fuzz_session_init='echo core > /proc/sys/kernel/core_pattern &&'
+
+if [[ $debug == 'true' ]]; then
+  fuzz_session_init="
+    ${fuzz_session_init}
+    export AFL_DEBUG_CHILD_OUTPUT=1 &&
+  "
+fi
+
 fuzz_session_init="
-  echo core > /proc/sys/kernel/core_pattern &&
+  ${fuzz_session_init}
   export AFL_AUTORESUME=1 &&
   export AFL_IMPORT_FIRST=1 &&
-  export AFL_DEBUG_CHILD_OUTPUT=1 &&
   export AFL_SKIP_CPUFREQ=0 &&
-  afl-fuzz ${afl_mode_selection} -T '0dayInc/container.aflplusplus.httpd' -R -C -i ${afl_session_root}/input -o ${afl_session_root}/multi_sync -m 2048 -t 6000+ -- ${target_binary}
+  afl-fuzz ${afl_mode_selection} -T '0dayInc/container.aflplusplus.httpd' -R -i ${afl_session_root}/input -o ${afl_session_root}/multi_sync -m none -t 6000+ -- ${target_binary}
 "
 
 case $afl_mode in
@@ -151,7 +159,7 @@ case $afl_mode in
     # Nuke contents of multi-sync (New afl++ Session)
     # if -n was passed as arg
     if [[ -d $afl_input && $nuke_test_cases == 'true' ]]; then
-      sudo rm -rf $afl_output/*
+      sudo rm -rf $afl_input/*
     fi
 
     # Nuke contents of multi-sync (New afl++ Session)
