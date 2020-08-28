@@ -5,6 +5,9 @@
 preferred_afl='afl-clang-fast'
 preferred_aflplusplus='afl-clang-fast++'
 
+export AFL_AS='/usr/bin/afl-as'
+export AFL_USE_ASAN=1
+
 docker_repo_root='/opt/container.aflplusplus.httpd'
 
 fuzz_session_root='/fuzz_session'
