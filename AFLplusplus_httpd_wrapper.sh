@@ -133,6 +133,18 @@ fuzz_session_init="
 
 case $afl_mode in
   'master')
+    # Nuke contents of httpd Prefix
+    # if -c was passed as arg
+    if [[ -d $httpd_prefix && $nuke_httpd_prefix == 'true' ]]; then
+      sudo rm -rf $httpd_prefix
+    fi
+
+    # Nuke contents of multi-sync (New afl++ Session)
+    # if -n was passed as arg
+    if [[ -d $afl_output && $nuke_multi_sync == 'true' ]]; then
+      sudo rm -rf $afl_output
+    fi
+
     # Build out afl_instrument_and_fuzz_session_init 
     # by parsing httpd_modules_for_instrumentation
     echo 'Building latest trunk of httpd...'
@@ -168,18 +180,6 @@ case $afl_mode in
            usage;; 
       esac
     done
-
-    # Nuke contents of httpd Prefix
-    # if -c was passed as arg
-    if [[ -d $httpd_prefix && $nuke_httpd_prefix == 'true' ]]; then
-      sudo rm -rf $httpd_prefix
-    fi
-
-    # Nuke contents of multi-sync (New afl++ Session)
-    # if -n was passed as arg
-    if [[ -d $afl_output && $nuke_multi_sync == 'true' ]]; then
-      sudo rm -rf $afl_output
-    fi
 
     afl_instrument_and_fuzz_session_init="${afl_instrument_and_fuzz_session_init} ${fuzz_session_init}"
 
