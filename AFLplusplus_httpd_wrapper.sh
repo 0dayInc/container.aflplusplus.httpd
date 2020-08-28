@@ -164,7 +164,7 @@ case $afl_mode in
     # Nuke contents of httpd Prefix
     # if -c was passed as arg
     if [[ -d $httpd_prefix && $nuke_httpd_prefix == 'true' ]]; then
-      sudo rm -rf $afl_output
+      sudo rm -rf $httpd_prefix
     fi
 
     # Nuke contents of multi-sync (New afl++ Session)
