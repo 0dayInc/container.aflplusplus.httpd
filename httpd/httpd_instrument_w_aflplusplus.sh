@@ -36,12 +36,13 @@ apt install -y subversion libssl-dev pkg-config strace netstat-nat net-tools apt
 
 # Install Radamsa to Support -R flag in afl-fuzz
 # (i.e. Include Radamsa for test case mutation)
-cd /fuzz_session
+radamsa_root="${fuzz_session_root}/radamsa"
+cd $fuzz_session_root
 git clone https://gitlab.com/akihe/radamsa.git
-cd radamsa
+cd $radamsa_root
 make
 make install
-rm -rf /fuzz_session/radamsa
+rm -rf $radamsa_root
 
 # Configure logrotate to rotate logs every hour
 logrotate_script='/usr/local/sbin/logrotate.sh'

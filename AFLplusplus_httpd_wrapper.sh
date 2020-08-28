@@ -145,7 +145,15 @@ fuzz_session_init="
   export AFL_AUTORESUME=1 &&
   export AFL_IMPORT_FIRST=1 &&
   export AFL_SKIP_CPUFREQ=0 &&
-  afl-fuzz ${afl_mode_selection} -T '0dayInc/container.aflplusplus.httpd' -R -i ${afl_session_root}/input -o ${afl_session_root}/multi_sync -m none -t 6000+ -- ${target_binary}
+  afl-fuzz \
+    ${afl_mode_selection} \
+    -T '0dayInc.httpd' \
+    -R \
+    -i ${afl_session_root}/input \
+    -o ${afl_session_root}/multi_sync \
+    -m none \
+    -t 6000+ \
+    -- ${target_binary}
 "
 
 case $afl_mode in
