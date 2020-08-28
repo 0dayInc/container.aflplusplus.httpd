@@ -56,7 +56,7 @@ while getopts "hm:a:cnLD" flag; do
     'c') nuke_httpd_prefix='true';;
     'n') nuke_multi_sync='true';;
     'L') list_supported_httpd_modules_to_instrument;;
-    'D') debug='true'
+    'D') debug='true';;
     *) usage;;
   esac
   no_args='false'
