@@ -5,9 +5,10 @@
 preferred_afl='afl-clang-fast'
 preferred_aflplusplus='afl-clang-fast++'
 
-# TODO:
-#  export AFL_KEEP_ASSEMBLY=1 &&
-#  export AFL_HARDEN=1 &&
+# HYPER INSTRUMENT:
+export AFL_LLVM_INSTRUMENT=CFG,NGRAM-16
+export AFL_KEEP_ASSEMBLY=1 &&
+export AFL_HARDEN=1 &&
 #  export AFL_USE_ASAN=1 &&
 #  export AFL_USE_UBSAN=1 &&
 #  export AFL_USE_CFISAN=1 &&
