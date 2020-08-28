@@ -23,6 +23,12 @@ usage() {
                           # which is tmpfs and LOST AFTER REBOOT
                           # OF HOST OS
 
+    -t                    # OPTIONAL / master MODE ONLY
+                          # Nuke contents of input (afl++ Test Cases)
+                          # Resides in /fuzz_session/AFLplusplus/input
+                          # which is tmpfs and LOST AFTER REBOOT
+                          # OF HOST OS
+
     -L                    # OPTIONAL
                           # List supported httpd modules to instrument
 
@@ -46,15 +52,17 @@ afl_mode=''
 httpd_modules_for_instrumentation=''
 nuke_httpd_prefix='false'
 nuke_multi_sync='false'
+nuke_test_cases='false'
 debug='false'
 
-while getopts "hm:a:cnLD" flag; do
+while getopts "hm:a:cntLD" flag; do
   case $flag in
     'h') usage;;
     'm') afl_mode="${OPTARG}";;
     'a') httpd_modules_for_instrumentation="${OPTARG}";;
     'c') nuke_httpd_prefix='true';;
     'n') nuke_multi_sync='true';;
+    't') nuke_test_cases='true';;
     'L') list_supported_httpd_modules_to_instrument;;
     'D') debug='true';;
     *) usage;;
@@ -106,11 +114,12 @@ if [[ ! -d $afl_input ]]; then
   sudo chmod 777 $afl_input
 fi
 
-target_binary="${httpd_prefix}/bin/httpd -X"
+if [[ ! -d $afl_output ]]; then
+  mkdir $afl_output
+  sudo chmod 777 $afl_output
+fi
 
-# Copy httpd && userland Test Cases to $afl_input Folder
-cp $httpd_test_cases/* $afl_input 2> /dev/null
-cp $userland_test_cases/* $afl_input 2> /dev/null
+target_binary="${httpd_prefix}/bin/httpd -X"
 
 # Set ADL Mode
 if [[ $afl_mode == 'master' ]]; then
@@ -141,14 +150,24 @@ case $afl_mode in
 
     # Nuke contents of multi-sync (New afl++ Session)
     # if -n was passed as arg
+    if [[ -d $afl_input && $nuke_test_cases == 'true' ]]; then
+      sudo rm -rf $afl_output/*
+    fi
+
+    # Nuke contents of multi-sync (New afl++ Session)
+    # if -n was passed as arg
     if [[ -d $afl_output && $nuke_multi_sync == 'true' ]]; then
-      sudo rm -rf $afl_output
+      sudo rm -rf $afl_output/*
     fi
 
     # Build out afl_instrument_and_fuzz_session_init 
     # by parsing httpd_modules_for_instrumentation
     echo 'Building latest trunk of httpd...'
     afl_instrument_httpd="${docker_repo_root}/httpd/httpd_instrument_w_aflplusplus.sh"
+    # Copy httpd && userland Test Cases to $afl_input Folder
+    cp $httpd_test_cases/* $afl_input 2> /dev/null
+    cp $userland_test_cases/* $afl_input 2> /dev/null
+
     afl_instrument_and_fuzz_session_init="${afl_instrument_httpd} &&"
 
     IFS=',' read -ra httpd_mod_arr <<< "${httpd_modules_for_instrumentation}"
