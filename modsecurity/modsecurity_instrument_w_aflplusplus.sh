@@ -1,10 +1,4 @@
 #!/bin/bash --login
-# TODO: Get lto working
-#preferred_afl='afl-clang-lto'
-#preferred_aflplusplus='afl-clang-lto++'
-preferred_afl='afl-clang-fast'
-preferred_aflplusplus='afl-clang-fast++'
-
 docker_repo_root='/opt/container.aflplusplus.httpd'
 
 # Define Target Instrumentation via instrumentation_globals.sh
