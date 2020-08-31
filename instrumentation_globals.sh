@@ -3,6 +3,9 @@
 # Define CC && CXX
 export preferred_afl='afl-clang-lto'
 export preferred_aflplusplus='afl-clang-lto++'
+export preferred_afl_linker='afl-ld-lto'
+export preferred_afl_ranlib='llvm-ranlib'
+export preferred_afl_ar='llvm-ar'
 #export preferred_afl='afl-clang-fast'
 #export preferred_aflplusplus='afl-clang-fast++'
 
