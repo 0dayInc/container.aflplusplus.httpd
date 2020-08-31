@@ -5,19 +5,10 @@
 preferred_afl='afl-clang-fast'
 preferred_aflplusplus='afl-clang-fast++'
 
-# HYPER INSTRUMENT:
-export AFL_LLVM_INSTRUMENT=CFG
-export AFL_LLVM_INSTRIM_LOOPHEAD=1
-export AFL_LLVM_LTO_AUTODICTIONARY=1
-export AFL_LLVM_LAF_ALL=1
-export AFL_HARDEN=1 &&
-export AFL_USE_ASAN=1 &&
-#  export AFL_USE_UBSAN=1 &&
-#  export AFL_USE_CFISAN=1 &&
-#export AFL_AS='/usr/bin/afl-as'
-#export AFL_USE_ASAN=1
-
 docker_repo_root='/opt/container.aflplusplus.httpd'
+
+# Define Target Instrumentation via instrumentation_globals.sh
+source $docker_repo_root/instrumentation_globals.sh
 
 fuzz_session_root='/fuzz_session'
 
