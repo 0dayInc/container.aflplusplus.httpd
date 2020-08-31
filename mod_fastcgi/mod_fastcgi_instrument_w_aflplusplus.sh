@@ -1,10 +1,5 @@
 #!/bin/bash --login
 # TODO: Get lto working
-#preferred_afl='afl-clang-lto'
-#preferred_aflplusplus='afl-clang-lto++'
-preferred_afl='afl-clang-fast'
-preferred_aflplusplus='afl-clang-fast++'
-
 docker_repo_root='/opt/container.aflplusplus.httpd'
 
 # Define Target Instrumentation via instrumentation_globals.sh
@@ -30,5 +25,5 @@ git clone $mod_fastcgi_github
 cd ${mod_fastcgi_repo}
 cp Makefile.AP2 Makefile
 sed -i 's/\/usr\/local\/apache2/\/fuzz_session\/httpd_src/g' Makefile
-CC=$preferred_afl CXX=$preferred_aflplusplus make
+CC=$preferred_afl CXX=$preferred_aflplusplus RANLIB=$preferred_afl_ranlib AR=$preferred_afl_ar make
 make install
