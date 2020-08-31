@@ -6,8 +6,9 @@ preferred_afl='afl-clang-fast'
 preferred_aflplusplus='afl-clang-fast++'
 
 # HYPER INSTRUMENT:
-export AFL_LLVM_INSTRUMENT=CFG,NGRAM-16
+export AFL_LLVM_INSTRUMENT=CFG
 export AFL_LLVM_INSTRIM_LOOPHEAD=1
+export AFL_LLVM_LTO_AUTODICTIONARY=1
 export AFL_KEEP_ASSEMBLY=1 &&
 export AFL_HARDEN=1 &&
 #  export AFL_USE_ASAN=1 &&
@@ -81,8 +82,11 @@ ${httpd_prefix}/logs/error_log {
 }
 EOF
 (crontab -l 2>/dev/null; echo "* * * * * ${logrotate_script}") | crontab -
-sleep 3
+
+printf 'Starting Cron Daemon...'
+sleep 6
 /etc/init.d/cron start
+echo 'complete.'
 # EOI --------------------------------------------------------------------#
 
 # Okay, now let's instrument httpd...
