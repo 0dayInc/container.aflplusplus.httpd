@@ -9,6 +9,7 @@ preferred_aflplusplus='afl-clang-fast++'
 export AFL_LLVM_INSTRUMENT=CFG
 export AFL_LLVM_INSTRIM_LOOPHEAD=1
 export AFL_LLVM_LTO_AUTODICTIONARY=1
+export AFL_LLVM_LAF_ALL=1
 export AFL_KEEP_ASSEMBLY=1 &&
 export AFL_HARDEN=1 &&
 #  export AFL_USE_ASAN=1 &&
