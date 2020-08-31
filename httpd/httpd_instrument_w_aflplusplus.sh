@@ -80,6 +80,7 @@ ${httpd_prefix}/logs/error_log {
 }
 EOF
 (crontab -l 2>/dev/null; echo "* * * * * ${logrotate_script}") | crontab -
+sleep 3
 /etc/init.d/cron start
 # EOI --------------------------------------------------------------------#
 
