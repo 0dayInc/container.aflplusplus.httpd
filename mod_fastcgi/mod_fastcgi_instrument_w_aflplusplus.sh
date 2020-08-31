@@ -25,5 +25,5 @@ git clone $mod_fastcgi_github
 cd ${mod_fastcgi_repo}
 cp Makefile.AP2 Makefile
 sed -i 's/\/usr\/local\/apache2/\/fuzz_session\/httpd_src/g' Makefile
-CC=$preferred_afl CXX=$preferred_aflplusplus RANLIB=$preferred_afl_ranlib AR=$preferred_afl_ar NM=$preferred_alf_nm make
+CC=$preferred_afl CXX=$preferred_aflplusplus RANLIB=$preferred_afl_ranlib AR=$preferred_afl_ar NM=$preferred_afl_nm make
 make install
