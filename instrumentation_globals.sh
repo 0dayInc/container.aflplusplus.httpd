@@ -1,11 +1,12 @@
 #!/bin/bash --login
 # INSTRUMENTATION GLOBALS:
 # Define CC && CXX
-#export preferred_afl='afl-clang-lto'
-#export preferred_aflplusplus='afl-clang-lto++'
-export preferred_afl='afl-clang-fast'
-export preferred_aflplusplus='afl-clang-fast++'
+export preferred_afl='afl-clang-lto'
+export preferred_aflplusplus='afl-clang-lto++'
+#export preferred_afl='afl-clang-fast'
+#export preferred_aflplusplus='afl-clang-fast++'
 
+export AFL_LLVM_MAP_DYNAMIC=1
 export AFL_LLVM_INSTRUMENT=CFG
 export AFL_LLVM_INSTRIM_LOOPHEAD=1
 export AFL_LLVM_LTO_AUTODICTIONARY=1
