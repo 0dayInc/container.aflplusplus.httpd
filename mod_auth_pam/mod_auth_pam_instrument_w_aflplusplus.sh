@@ -26,7 +26,7 @@ mv $mod_auth_pam_tar_gz ${mod_auth_pam_repo}
 apt install -y libpam0g-dev
 export PATH=$PATH:${httpd_prefix}/bin
 cd ${mod_auth_pam_repo}
-CC=$preferred_afl CXX=$preferred_aflplusplus RANLIB=$preferred_afl_ranlib AR=$preferred_afl_ar NM=$preferred_alf_nm make
+CC=$preferred_afl CXX=$preferred_aflplusplus RANLIB=$preferred_afl_ranlib AR=$preferred_afl_ar NM=$preferred_afl_nm make
 make install
 # This symlink is to properly reference absolute path of pam_unix.so found in /etc/pam.d/httpd
 ln -s /lib/x86_64-linux-gnu/security /lib/security
