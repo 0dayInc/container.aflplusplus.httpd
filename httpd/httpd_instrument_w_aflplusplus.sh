@@ -85,8 +85,7 @@ EOF
 (crontab -l 2>/dev/null; echo "* * * * * ${logrotate_script}") | crontab -
 
 printf 'Starting Cron Daemon...'
-sleep 6
-/etc/init.d/cron start
+cd / && /etc/init.d/cron start
 echo 'complete.'
 # EOI --------------------------------------------------------------------#
 
