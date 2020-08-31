@@ -145,6 +145,7 @@ fuzz_session_init="
   export AFL_AUTORESUME=1 &&
   export AFL_IMPORT_FIRST=1 &&
   export AFL_SKIP_CPUFREQ=0 &&
+  export AFL_SHUFFLE_QUEUE=1 &&
   afl-fuzz \
     ${afl_mode_selection} \
     -T '0dayInc.httpd' \
