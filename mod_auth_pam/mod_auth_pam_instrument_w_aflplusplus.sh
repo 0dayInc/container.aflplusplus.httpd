@@ -7,6 +7,9 @@ preferred_aflplusplus='afl-clang-fast++'
 
 docker_repo_root='/opt/container.aflplusplus.httpd'
 
+# Define Target Instrumentation via instrumentation_globals.sh
+source $docker_repo_root/instrumentation_globals.sh
+
 fuzz_session_root='/fuzz_session'
 
 afl_session_root="${fuzz_session_root}/AFLplusplus"
