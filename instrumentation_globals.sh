@@ -8,10 +8,21 @@ export preferred_afl_ranlib='llvm-ranlib-11'
 export preferred_afl_ar='llvm-ar-11'
 export preferred_afl_nm='llvm-nm-11'
 
-export AFL_LLVM_MAP_DYNAMIC=1
 export AFL_LLVM_LTO_AUTODICTIONARY=1
+export AFL_LLVM_MAP_DYNAMIC=1
+
+# InsTrim uses CFG and markers to instrument
+# just what is necessary in the binary in 
+# llvm_mode. It is about 10-15% faster without
+# disadvantages.
 export AFL_LLVM_INSTRUMENT=CFG
-export AFL_LLVM_INSTRIM_LOOPHEAD=1
+
+# There is also an advanced mode which instruments 
+# loops in a way so that afl-fuzz can see which loop 
+# path has been selected but not being able to see how 
+# often the loop has been rerun.  This again is a 
+# tradeoff for speed for less path information.
+#export AFL_LLVM_INSTRIM_LOOPHEAD=1
 
 #export AFL_LLVM_LAF_SPLIT_SWITCHES=1
 #export AFL_LLVM_LAF_SPLIT_COMPARES=1
