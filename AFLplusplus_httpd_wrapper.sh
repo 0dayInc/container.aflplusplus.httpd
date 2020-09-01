@@ -135,7 +135,6 @@ fi
 # they can be reversed when fuzz session is complete
 fuzz_session_init='
   echo core > /proc/sys/kernel/core_pattern &&
-  if [[ -d /sys/devices/system/cpu/cpufreq ]]; then cd /sys/devices/system/cpu && echo performance | tee cpu*/cpufreq/scaling_governor && fi &&
   echo never > /sys/kernel/mm/transparent_hugepage/enabled &&
   echo 1 >/proc/sys/kernel/sched_child_runs_first &&
   echo 1 >/proc/sys/kernel/sched_autogroup_enabled &&
