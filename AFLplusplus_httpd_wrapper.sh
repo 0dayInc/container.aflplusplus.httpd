@@ -239,6 +239,15 @@ case $afl_mode in
     fi
     
     # Instrument & Run Master
+    if [[ -d /sys/devices/systemc/cpu ]]; then 
+      sudo /bin/bash \
+        --login \
+        -c "
+          cd /sys/devices/systemc/cpu &&
+          echo performance | tee cpu*/cpufreq/scaling_governor
+        "
+    fi
+
     sudo sysctl -w kernel.unprivileged_userns_clone=1
     docker run \
       --privileged \
