@@ -18,7 +18,7 @@ modsecurity_repo="${httpd_repo}/modules/modsecurity"
 repo_name=`basename ${modsecurity_repo}`
 
 cd `dirname ${modsecurity_repo}`
-git clone $fastcgi_github modsecurity
+git clone $modsecurity_github modsecurity
 
 # Instrument modsecurity
 cd ${modsecurity_repo}
