@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 10:43:32.000000000 -0600
++++ server/main.AFL++.c	2020-09-02 10:50:48.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -129,9 +129,9 @@
 +    }
 +    printf("[+] Whew lad!\n");
 +    usleep(100000);
++    destroy_and_exit_process(process, 0);
 +    _exit(0);
 +    exit(0);
-+    //destroy_and_exit_process(process, 0);
 +}
 +
 +static void LAUNCHTHR(process_rec *process)
@@ -146,7 +146,7 @@
 +    pthread_create(&t, &attr, GETDATA, process);
 +}
 +
-+__AFL_FUZZ_INIT();
++//__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
@@ -166,7 +166,7 @@
 +
 +    // AFL++ SNIP
 +//#ifdef __AFL_HAVE_MANUAL_CONTROL
-+    __AFL_INIT();
++    //__AFL_INIT();
 +    if (getenv("NO_FUZZ") == NULL) {
 +        unsh();
 +        LAUNCHTHR(process);
