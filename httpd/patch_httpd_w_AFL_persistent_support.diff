@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 15:31:49.000000000 -0600
++++ server/main.AFL++.c	2020-09-02 15:49:35.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -38,9 +38,9 @@
 +static void GETDATA(process_rec *process)
 +{
 +    int BUFSIZE=1024*1024;
-+    usleep(10000);
++    //usleep(10000);
 +    char buf[BUFSIZE+1];
-+    int iterations = 1000;
++    int iterations = 300000;
 +    printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
 +    //__AFL_INIT();
 +    while ( __AFL_LOOP(iterations) ){
@@ -108,7 +108,7 @@
 +        printf("=> successfully closed sockfd\n");
 +    }
 +    printf("[+] __AFL_LOOP(%d) COMPLETE.\n", iterations);
-+    usleep(100000);
++    //usleep(100000);
 +    //destroy_and_exit_process(process, 0);
 +    //_exit(0);
 +    exit(0);
