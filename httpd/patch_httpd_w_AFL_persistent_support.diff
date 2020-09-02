@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 11:18:53.000000000 -0600
++++ server/main.AFL++.c	2020-09-02 11:39:45.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -485,12 +508,128 @@
+@@ -485,12 +508,135 @@
      destroy_and_exit_process(process, 1);
  }
  
@@ -73,61 +73,68 @@
 +    int BUFSIZE=1024*1024;
 +    usleep(10000);
 +    char buf[BUFSIZE+1];
-+    while ( __AFL_LOOP(100000) ){
-+        printf("[+] Looping\n");
++    printf("[+] Launch loop...\n");
++    //while ( __AFL_LOOP(100000) ){
++    while ( __AFL_LOOP(3000) ){
++        printf("=> memset BUFSIZE to buf\n");
 +        memset(buf, 0, BUFSIZE);
 +        size_t read_bytes = read(0, buf, BUFSIZE);
 +        buf[BUFSIZE-2] = '\r';
 +        buf[BUFSIZE-1] = '\n';
 +        buf[BUFSIZE] = '\0';
 +
++        printf("=> init sockfd\n");
 +        int sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 +        if (sockfd == -1) {
++            printf("[!] sockfd error!\n");
 +            perror("socket");
 +            _exit(1);
 +        }
 +
++        printf("=> init setsockopt\n");
 +        int sz = (1024 * 1024);
 +        if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz)) == -1) {
++            printf("[!] setsockopt error!\n");
 +            perror("setsockopt");
 +            exit(1);
 +        }
 +
-+        printf("[+] Connecting\n", buf);
++        printf("=> connecting to tcp port 80\n", buf);
 +
 +        struct sockaddr_in saddr;
 +        saddr.sin_family = AF_INET;
 +        saddr.sin_port = htons(80);
 +        saddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 +        if (connect(sockfd, &saddr, sizeof(saddr)) == -1) {
-+            printf("[-] Connect failed\n");
++            printf("[!] connect error!\n");
 +            perror("connect");
 +            continue;
 +        }
 +
-+        printf("[+] Sending buf %s\n", buf);
-+
++        printf("=> sending buf %s\n", buf);
 +        if (send(sockfd, buf, read_bytes, MSG_NOSIGNAL) != read_bytes) {
++            printf("[!] failed to send payload!\n");
 +            perror("send() failed 1");
 +            exit(1);
 +        }
 +
-+        printf("[+] Buf sent %s\n", &buf);
++        printf("=> buf sent %s\n", &buf);
 +
 +        if (shutdown(sockfd, SHUT_WR) == -1) {
++            printf("[!] failed to shutdown sockfd!\n");
 +            perror("shutdown");
 +            exit(1);
 +        }
 +
 +        char b[1024 * 1024];
 +        while (recv(sockfd, b, sizeof(b), MSG_WAITALL) > 0) ;
++        printf("=> received from sockfd %s\n", b);
 +
-+        printf("[+] Received %s\n", b);
-+
++        printf("=> closing sockfd\n");
 +        close(sockfd);
-+        printf("[+] Nice run\n");
++        printf("=> successfully closed sockfd\n");
 +    }
-+    printf("[+] Whew lad!\n");
++    printf("[+] Loop complete.\n");
 +    usleep(100000);
 +    destroy_and_exit_process(process, 0);
 +    //_exit(0);
@@ -146,7 +153,7 @@
 +    pthread_create(&t, &attr, GETDATA, process);
 +}
 +
-+__AFL_FUZZ_INIT();
++//__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
@@ -159,7 +166,7 @@
      char c;
      int showcompile = 0, showdirectives = 0;
      const char *confname = SERVER_CONFIG_FILE;
-@@ -498,6 +637,19 @@
+@@ -498,6 +644,18 @@
      const char *temp_error_log = NULL;
      const char *error;
      process_rec *process;
@@ -170,7 +177,6 @@
 +    if (getenv("NO_FUZZ") == NULL) {
 +        //unsh();
 +        LAUNCHTHR(process);
-+        printf("[+] Launched loop\n");
 +    }
 +    //printf("[+] I did follow\n");
 +//#endif
@@ -179,13 +185,12 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +894,12 @@
+@@ -742,7 +900,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
 -        destroy_and_exit_process(process, 1);
 +        // AFL++ SNIP
-+        //destroy_and_exit_process(process, 1);
 +        printf("[-] Config failed...\n");
 +        destroy_and_exit_process(process, 0);
 +        //destroy_and_exit_process(process, 1);
@@ -193,7 +198,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +907,9 @@
+@@ -750,6 +912,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
