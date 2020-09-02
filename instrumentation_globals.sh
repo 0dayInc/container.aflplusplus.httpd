@@ -32,7 +32,7 @@ export AFL_LLVM_LTO_AUTODICTIONARY=1
 # AFL_LLVM_MAP_DYNAMIC can be set so the shared
 # memory address is dynamic (which is safer but also
 # slower).
-#export AFL_LLVM_MAP_DYNAMIC=1
+export AFL_LLVM_MAP_DYNAMIC=1
 
 # InsTrim uses CFG and markers to instrument
 # just what is necessary in the binary in 
