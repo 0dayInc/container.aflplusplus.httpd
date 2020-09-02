@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 16:21:29.000000000 -0600
++++ server/main.AFL++.c	2020-09-02 16:27:47.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,15 +505,114 @@
+@@ -482,15 +505,108 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -41,7 +41,7 @@
 +}
 +
 +// AFL++ SNIP
-+static void consume_mutated_afl_test_cases(process_rec *process)
++static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
 +    int BUFSIZE=1024*1024;
 +    //usleep(10000);
@@ -63,7 +63,7 @@
 +            printf("[!] sockfd error!\n");
 +            perror("socket");
 +            //_exit(1);
-+            destroy_and_exit_process(process, 1);
++            exit(1);
 +        }
 +
 +        printf("=> init setsockopt\n");
@@ -71,8 +71,7 @@
 +        if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz)) == -1) {
 +            printf("[!] setsockopt error!\n");
 +            perror("setsockopt");
-+            //exit(1);
-+            destroy_and_exit_process(process, 1);
++            exit(1);
 +        }
 +
 +        printf("=> connecting to tcp port 80\n", buf);
@@ -91,8 +90,7 @@
 +        if (send(sockfd, buf, read_bytes, MSG_NOSIGNAL) != read_bytes) {
 +            printf("[!] failed to send payload!\n");
 +            perror("send() failed 1");
-+            //exit(1);
-+            destroy_and_exit_process(process, 1);
++            exit(1);
 +        }
 +
 +        printf("=> buf sent %s\n", &buf);
@@ -100,8 +98,7 @@
 +        if (shutdown(sockfd, SHUT_WR) == -1) {
 +            printf("[!] failed to shutdown sockfd!\n");
 +            perror("shutdown");
-+            //exit(1);
-+            destroy_and_exit_process(process, 1);
++            exit(1);
 +        }
 +
 +        char b[1024 * 1024];
@@ -114,12 +111,11 @@
 +    }
 +    printf("[+] __AFL_LOOP(%d) COMPLETE.\n", iterations);
 +    //usleep(100000);
-+    //destroy_and_exit_process(process, 0);
 +    //_exit(0);
-+    //exit(0);
-+}
-+
-+static void init_afl_thread(process_rec *process)
++    exit(0);
+ }
+ 
++static void INIT_AFL_THREAD(process_rec *process)
 +{
 +    pthread_t t;
 +    pthread_attr_t attr;
@@ -128,11 +124,9 @@
 +    pthread_attr_setstacksize(&attr, 1024 * 1024 * 8);
 +    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 +
-+    pthread_create(&t, &attr, consume_mutated_afl_test_cases, process);
++    pthread_create(&t, &attr, INIT_AFL_MUTATION_SESSION, process);
++}
 +
-+    destroy_and_exit_process(process, 0);
- }
- 
 +//__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
@@ -146,21 +140,21 @@
      char c;
      int showcompile = 0, showdirectives = 0;
      const char *confname = SERVER_CONFIG_FILE;
-@@ -498,6 +620,13 @@
+@@ -498,6 +614,13 @@
      const char *temp_error_log = NULL;
      const char *error;
      process_rec *process;
 +
 +    // AFL++ SNIP
 +#ifdef __AFL_HAVE_MANUAL_CONTROL
-+    init_afl_thread(process);
++    INIT_AFL_THREAD(process);
 +#endif
 +    // AFL++ EOS
 +
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +871,11 @@
+@@ -742,7 +865,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -173,7 +167,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +883,9 @@
+@@ -750,6 +877,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
