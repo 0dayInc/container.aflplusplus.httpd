@@ -1,5 +1,5 @@
---- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 10:13:38.000000000 -0600
+--- server/main.c  2020-08-27 09:11:38.036097854 -0600
++++ server/main.FUZZ.c  2020-08-27 09:38:24.816020578 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,50 +30,50 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -485,12 +508,128 @@
+@@ -485,19 +508,141 @@
      destroy_and_exit_process(process, 1);
  }
  
 +// AFL++ SNIP
-+//static void netIfaceUp(const char *ifacename)
-+//{
-+//    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-+//    if (sock == -1) {
-+//        perror("socket(AF_INET, SOCK_STREAM, IPPROTO_IP)");
-+//        _exit(1);
-+//    }
-+//
-+//    struct ifreq ifr;
-+//    memset(&ifr, '\0', sizeof(ifr));
-+//    snprintf(ifr.ifr_name, IF_NAMESIZE, "%s", ifacename);
-+//
-+//    if (ioctl(sock, SIOCGIFFLAGS, &ifr) == -1) {
-+//        perror("ioctl(iface='lo', SIOCGIFFLAGS, IFF_UP)");
-+//        _exit(1);
-+//    }
-+//
-+//    ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
-+//
-+//    if (ioctl(sock, SIOCSIFFLAGS, &ifr) == -1) {
-+//        perror("ioctl(iface='lo', SIOCSIFFLAGS, IFF_UP)");
-+//        _exit(1);
-+//    }
-+//
-+//    close(sock);
-+//}
++static void netIfaceUp(const char *ifacename)
++{
++    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
++    if (sock == -1) {
++        perror("socket(AF_INET, SOCK_STREAM, IPPROTO_IP)");
++        _exit(1);
++    }
 +
-+//void unsh(void)
-+//{
-+//    unshare(CLONE_NEWUSER | CLONE_NEWNET | CLONE_NEWNS);
-+//    netIfaceUp("lo");
-+//}
++    struct ifreq ifr;
++    memset(&ifr, '\0', sizeof(ifr));
++    snprintf(ifr.ifr_name, IF_NAMESIZE, "%s", ifacename);
++
++    if (ioctl(sock, SIOCGIFFLAGS, &ifr) == -1) {
++        perror("ioctl(iface='lo', SIOCGIFFLAGS, IFF_UP)");
++        _exit(1);
++    }
++
++    ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
++
++    if (ioctl(sock, SIOCSIFFLAGS, &ifr) == -1) {
++        perror("ioctl(iface='lo', SIOCSIFFLAGS, IFF_UP)");
++        _exit(1);
++    }
++
++    close(sock);
++}
++
++void unsh(void)
++{
++    unshare(CLONE_NEWUSER | CLONE_NEWNET | CLONE_NEWNS);
++    netIfaceUp("lo");
++}
 +
 +static void GETDATA(process_rec *process)
 +{
 +    int BUFSIZE=1024*1024;
-+    //usleep(10000);
++    usleep(10000);
 +    char buf[BUFSIZE+1];
-+    while ( __AFL_LOOP(1000) ){
++    while ( __AFL_LOOP(30000) ){
 +        printf("[+] Looping\n");
 +        memset(buf, 0, BUFSIZE);
 +        size_t read_bytes = read(0, buf, BUFSIZE);
@@ -128,10 +128,9 @@
 +        printf("[+] Nice run\n");
 +    }
 +    printf("[+] Whew lad!\n");
-+    //usleep(100000);
-+    //_exit(0);
-+    //exit(0);
-+    destroy_and_exit_process(process, 0);
++    usleep(100000);
++    _exit(0);
++    exit(0);
 +}
 +
 +static void LAUNCHTHR(process_rec *process)
@@ -145,8 +144,6 @@
 +
 +    pthread_create(&t, &attr, GETDATA, process);
 +}
-+
-+__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
@@ -155,31 +152,28 @@
   int main(int argc, const char *const *argv)
  #endif
  {
++    // AFL++ SNIP
++    process_rec *process; // Needed to finish apache
++    if (getenv("NO_FUZZ") == NULL) {
++        unsh();
++        LAUNCHTHR(process);
++        printf("[+] Launched loop\n");
++    }
++    printf("[+] I did follow\n");
++    // AFL++ EOS
 +
      char c;
      int showcompile = 0, showdirectives = 0;
      const char *confname = SERVER_CONFIG_FILE;
-@@ -498,6 +637,19 @@
+     const char *def_server_root = HTTPD_ROOT;
      const char *temp_error_log = NULL;
      const char *error;
-     process_rec *process;
-+
-+    // AFL++ SNIP
-+#ifdef __AFL_HAVE_MANUAL_CONTROL
-+    __AFL_INIT();
-+    //if (getenv("NO_FUZZ") == NULL) {
-+        //unsh();
-+        LAUNCHTHR(process);
-+        printf("[+] Launched loop\n");
-+    //}
-+    //printf("[+] I did follow\n");
-+#endif
-+    // AFL++ EOS
-+
+-    process_rec *process;
++    //process_rec *process;
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +894,12 @@
+@@ -742,7 +887,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -188,12 +182,11 @@
 +        //destroy_and_exit_process(process, 1);
 +        printf("[-] Config failed...\n");
 +        destroy_and_exit_process(process, 0);
-+        //destroy_and_exit_process(process, 1);
-+        // AFL++ EOS        
++        // AFL++ EOS
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +907,9 @@
+@@ -750,6 +899,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
