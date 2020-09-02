@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 10:50:48.000000000 -0600
++++ server/main.AFL++.c	2020-09-02 11:04:13.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -73,7 +73,7 @@
 +    int BUFSIZE=1024*1024;
 +    usleep(10000);
 +    char buf[BUFSIZE+1];
-+    while ( __AFL_LOOP(1000) ){
++    while ( __AFL_LOOP(100000) ){
 +        printf("[+] Looping\n");
 +        memset(buf, 0, BUFSIZE);
 +        size_t read_bytes = read(0, buf, BUFSIZE);
@@ -130,8 +130,8 @@
 +    printf("[+] Whew lad!\n");
 +    usleep(100000);
 +    destroy_and_exit_process(process, 0);
-+    _exit(0);
-+    exit(0);
++    //_exit(0);
++    //xit(0);
 +}
 +
 +static void LAUNCHTHR(process_rec *process)
@@ -168,7 +168,7 @@
 +//#ifdef __AFL_HAVE_MANUAL_CONTROL
 +    //__AFL_INIT();
 +    if (getenv("NO_FUZZ") == NULL) {
-+        unsh();
++        //unsh();
 +        LAUNCHTHR(process);
 +        printf("[+] Launched loop\n");
 +    }
