@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 16:44:50.000000000 -0600
++++ server/main.AFL++.c	2020-09-02 16:58:37.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +505,124 @@
+@@ -482,22 +505,123 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -44,7 +44,6 @@
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
 +    int BUFSIZE=1024*1024;
-+    //usleep(10000);
 +    char buf[BUFSIZE+1];
 +    int iterations = 3000;
 +    printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
@@ -110,7 +109,6 @@
 +        printf("=> successfully closed sockfd\n");
 +    }
 +    printf("[+] __AFL_LOOP(%d) COMPLETE.\n", iterations);
-+    //usleep(100000);
 +    _exit(0);
 +    exit(0);
 +}
@@ -140,6 +138,7 @@
 +    process_rec *process;
 +    if (getenv("CRASH_TEST") == NULL) {
 +      INIT_AFL_THREAD(process);
++      destroy_and_exit_process(process, 0);
 +    } else {
 +      printf("[!] Crash Test Mode Initialized:\n");
 +    }
@@ -157,7 +156,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +867,11 @@
+@@ -742,7 +866,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -170,7 +169,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +879,9 @@
+@@ -750,6 +878,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
