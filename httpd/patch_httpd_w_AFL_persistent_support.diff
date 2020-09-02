@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 16:27:47.000000000 -0600
++++ server/main.AFL++.c	2020-09-02 16:41:03.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,15 +505,108 @@
+@@ -482,22 +505,124 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -62,8 +62,8 @@
 +        if (sockfd == -1) {
 +            printf("[!] sockfd error!\n");
 +            perror("socket");
-+            //_exit(1);
-+            exit(1);
++            _exit(1);
++            //exit(1);
 +        }
 +
 +        printf("=> init setsockopt\n");
@@ -111,10 +111,10 @@
 +    }
 +    printf("[+] __AFL_LOOP(%d) COMPLETE.\n", iterations);
 +    //usleep(100000);
-+    //_exit(0);
++    _exit(0);
 +    exit(0);
- }
- 
++}
++
 +static void INIT_AFL_THREAD(process_rec *process)
 +{
 +    pthread_t t;
@@ -125,8 +125,8 @@
 +    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 +
 +    pthread_create(&t, &attr, INIT_AFL_MUTATION_SESSION, process);
-+}
-+
+ }
+ 
 +//__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
@@ -136,25 +136,28 @@
   int main(int argc, const char *const *argv)
  #endif
  {
++    // AFL++ SNIP
++    process_rec *process;
++    if (getenv("TEST_CRASH") == NULL) {
++      INIT_AFL_THREAD(process);
++    } else {
++      printf("[!] Crash Test Mode...Go:\n");
++    }
++    // AFL++ EOS
++
 +
      char c;
      int showcompile = 0, showdirectives = 0;
      const char *confname = SERVER_CONFIG_FILE;
-@@ -498,6 +614,13 @@
+     const char *def_server_root = HTTPD_ROOT;
      const char *temp_error_log = NULL;
      const char *error;
-     process_rec *process;
-+
-+    // AFL++ SNIP
-+#ifdef __AFL_HAVE_MANUAL_CONTROL
-+    INIT_AFL_THREAD(process);
-+#endif
-+    // AFL++ EOS
+-    process_rec *process;
 +
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +865,11 @@
+@@ -742,7 +867,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -167,7 +170,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +877,9 @@
+@@ -750,6 +879,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
