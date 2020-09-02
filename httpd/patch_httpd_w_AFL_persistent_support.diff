@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 14:04:49.000000000 -0600
++++ server/main.AFL++.c	2020-09-02 14:19:59.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -485,12 +508,139 @@
+@@ -485,12 +508,140 @@
      destroy_and_exit_process(process, 1);
  }
  
@@ -73,8 +73,9 @@
 +    int BUFSIZE=1024*1024;
 +    usleep(10000);
 +    char buf[BUFSIZE+1];
-+    printf("[+] Launch loop...\n");
-+    while ( __AFL_LOOP(1000) ){
++    int iterations = 1000;
++    printf("[+] ENTERING __AFL_LOOP(%d)...\n"i, iterations);
++    while ( __AFL_LOOP(iterations) ){
 +        printf("=> memset BUFSIZE to buf\n");
 +        memset(buf, 0, BUFSIZE);
 +        size_t read_bytes = read(0, buf, BUFSIZE);
@@ -138,7 +139,7 @@
 +        close(sockfd);
 +        printf("=> successfully closed sockfd\n");
 +    }
-+    printf("[+] Loop complete.\n");
++    printf("[+] __AFL_LOOP(%d) COMPLETE.\n", iterations);
 +    usleep(100000);
 +    //destroy_and_exit_process(process, 0);
 +    //_exit(0);
@@ -157,7 +158,7 @@
 +    pthread_create(&t, &attr, GETDATA, process);
 +}
 +
-+//__AFL_FUZZ_INIT();
++__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
@@ -170,7 +171,7 @@
      char c;
      int showcompile = 0, showdirectives = 0;
      const char *confname = SERVER_CONFIG_FILE;
-@@ -498,6 +648,17 @@
+@@ -498,6 +649,17 @@
      const char *temp_error_log = NULL;
      const char *error;
      process_rec *process;
@@ -188,7 +189,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +903,11 @@
+@@ -742,7 +904,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -196,12 +197,12 @@
 +        // AFL++ SNIP
 +        printf("[-] Config failed...\n");
 +        destroy_and_exit_process(process, 0);
-+        //destroy_and_exit_process(process, 1);
 +        // AFL++ EOS        
++        //destroy_and_exit_process(process, 1);
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +915,9 @@
+@@ -750,6 +916,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
