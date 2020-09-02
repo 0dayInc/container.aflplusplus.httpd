@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 12:09:55.000000000 -0600
++++ server/main.AFL++.c	2020-09-02 12:16:21.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -35,38 +35,38 @@
  }
  
 +// AFL++ SNIP
-+//static void netIfaceUp(const char *ifacename)
-+//{
-+//    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-+//    if (sock == -1) {
-+//        perror("socket(AF_INET, SOCK_STREAM, IPPROTO_IP)");
-+//        _exit(1);
-+//    }
-+//
-+//    struct ifreq ifr;
-+//    memset(&ifr, '\0', sizeof(ifr));
-+//    snprintf(ifr.ifr_name, IF_NAMESIZE, "%s", ifacename);
-+//
-+//    if (ioctl(sock, SIOCGIFFLAGS, &ifr) == -1) {
-+//        perror("ioctl(iface='lo', SIOCGIFFLAGS, IFF_UP)");
-+//        _exit(1);
-+//    }
-+//
-+//    ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
-+//
-+//    if (ioctl(sock, SIOCSIFFLAGS, &ifr) == -1) {
-+//        perror("ioctl(iface='lo', SIOCSIFFLAGS, IFF_UP)");
-+//        _exit(1);
-+//    }
-+//
-+//    close(sock);
-+//}
++static void netIfaceUp(const char *ifacename)
++{
++    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
++    if (sock == -1) {
++        perror("socket(AF_INET, SOCK_STREAM, IPPROTO_IP)");
++        _exit(1);
++    }
 +
-+//void unsh(void)
-+//{
-+//    unshare(CLONE_NEWUSER | CLONE_NEWNET | CLONE_NEWNS);
-+//    netIfaceUp("lo");
-+//}
++    struct ifreq ifr;
++    memset(&ifr, '\0', sizeof(ifr));
++    snprintf(ifr.ifr_name, IF_NAMESIZE, "%s", ifacename);
++
++    if (ioctl(sock, SIOCGIFFLAGS, &ifr) == -1) {
++        perror("ioctl(iface='lo', SIOCGIFFLAGS, IFF_UP)");
++        _exit(1);
++    }
++
++    ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
++
++    if (ioctl(sock, SIOCSIFFLAGS, &ifr) == -1) {
++        perror("ioctl(iface='lo', SIOCSIFFLAGS, IFF_UP)");
++        _exit(1);
++    }
++
++    close(sock);
++}
++
++void unsh(void)
++{
++    unshare(CLONE_NEWUSER | CLONE_NEWNET | CLONE_NEWNS);
++    netIfaceUp("lo");
++}
 +
 +static void GETDATA(process_rec *process)
 +{
@@ -169,7 +169,7 @@
      char c;
      int showcompile = 0, showdirectives = 0;
      const char *confname = SERVER_CONFIG_FILE;
-@@ -498,6 +647,18 @@
+@@ -498,6 +647,17 @@
      const char *temp_error_log = NULL;
      const char *error;
      process_rec *process;
@@ -178,17 +178,16 @@
 +//#ifdef __AFL_HAVE_MANUAL_CONTROL
 +    //__AFL_INIT();
 +    if (getenv("NO_FUZZ") == NULL) {
-+        //unsh();
++        unsh();
 +        LAUNCHTHR(process);
 +    }
-+    //printf("[+] I did follow\n");
 +//#endif
 +    // AFL++ EOS
 +
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +903,11 @@
+@@ -742,7 +902,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -201,7 +200,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +915,9 @@
+@@ -750,6 +914,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
