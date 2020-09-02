@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 16:10:00.000000000 -0600
++++ server/main.AFL++.c	2020-09-02 16:18:29.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -63,8 +63,7 @@
 +            printf("[!] sockfd error!\n");
 +            perror("socket");
 +            //_exit(1);
-+            exit(1);
-+            //destroy_and_exit_process(process, 1);
++            destroy_and_exit_process(process, 1);
 +        }
 +
 +        printf("=> init setsockopt\n");
@@ -72,8 +71,8 @@
 +        if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz)) == -1) {
 +            printf("[!] setsockopt error!\n");
 +            perror("setsockopt");
-+            exit(1);
-+            //destroy_and_exit_process(process, 1);
++            //exit(1);
++            destroy_and_exit_process(process, 1);
 +        }
 +
 +        printf("=> connecting to tcp port 80\n", buf);
@@ -92,8 +91,8 @@
 +        if (send(sockfd, buf, read_bytes, MSG_NOSIGNAL) != read_bytes) {
 +            printf("[!] failed to send payload!\n");
 +            perror("send() failed 1");
-+            exit(1);
-+            //destroy_and_exit_process(process, 1);
++            //exit(1);
++            destroy_and_exit_process(process, 1);
 +        }
 +
 +        printf("=> buf sent %s\n", &buf);
@@ -101,8 +100,8 @@
 +        if (shutdown(sockfd, SHUT_WR) == -1) {
 +            printf("[!] failed to shutdown sockfd!\n");
 +            perror("shutdown");
-+            exit(1);
-+            //destroy_and_exit_process(process, 1);
++            //exit(1);
++            destroy_and_exit_process(process, 1);
 +        }
 +
 +        char b[1024 * 1024];
@@ -117,10 +116,9 @@
 +    //usleep(100000);
 +    //destroy_and_exit_process(process, 0);
 +    //_exit(0);
-+    exit(0);
-+    //return 0;
- }
- 
++    //exit(0);
++}
++
 +static void LAUNCHTHR(process_rec *process)
 +{
 +    pthread_t t;
@@ -131,8 +129,10 @@
 +    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 +
 +    pthread_create(&t, &attr, GETDATA, process);
-+}
 +
++    destroy_and_exit_process(process, 0);
+ }
+ 
 +//__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
