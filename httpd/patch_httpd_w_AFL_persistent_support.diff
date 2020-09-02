@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-02 12:16:21.000000000 -0600
++++ server/main.AFL++.c	2020-09-02 14:04:49.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -485,12 +508,138 @@
+@@ -485,12 +508,139 @@
      destroy_and_exit_process(process, 1);
  }
  
@@ -88,7 +88,8 @@
 +            printf("[!] sockfd error!\n");
 +            perror("socket");
 +            //_exit(1);
-+            destroy_and_exit_process(process, 1);
++            exit(1);
++            //destroy_and_exit_process(process, 1);
 +        }
 +
 +        printf("=> init setsockopt\n");
@@ -96,8 +97,8 @@
 +        if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz)) == -1) {
 +            printf("[!] setsockopt error!\n");
 +            perror("setsockopt");
-+            //exit(1);
-+            destroy_and_exit_process(process, 1);
++            exit(1);
++            //destroy_and_exit_process(process, 1);
 +        }
 +
 +        printf("=> connecting to tcp port 80\n", buf);
@@ -116,8 +117,8 @@
 +        if (send(sockfd, buf, read_bytes, MSG_NOSIGNAL) != read_bytes) {
 +            printf("[!] failed to send payload!\n");
 +            perror("send() failed 1");
-+            //exit(1);
-+            destroy_and_exit_process(process, 1);
++            exit(1);
++            //destroy_and_exit_process(process, 1);
 +        }
 +
 +        printf("=> buf sent %s\n", &buf);
@@ -125,8 +126,8 @@
 +        if (shutdown(sockfd, SHUT_WR) == -1) {
 +            printf("[!] failed to shutdown sockfd!\n");
 +            perror("shutdown");
-+            //exit(1);
-+            destroy_and_exit_process(process, 1);
++            exit(1);
++            //destroy_and_exit_process(process, 1);
 +        }
 +
 +        char b[1024 * 1024];
@@ -139,9 +140,9 @@
 +    }
 +    printf("[+] Loop complete.\n");
 +    usleep(100000);
-+    destroy_and_exit_process(process, 0);
++    //destroy_and_exit_process(process, 0);
 +    //_exit(0);
-+    //xit(0);
++    exit(0);
 +}
 +
 +static void LAUNCHTHR(process_rec *process)
@@ -169,7 +170,7 @@
      char c;
      int showcompile = 0, showdirectives = 0;
      const char *confname = SERVER_CONFIG_FILE;
-@@ -498,6 +647,17 @@
+@@ -498,6 +648,17 @@
      const char *temp_error_log = NULL;
      const char *error;
      process_rec *process;
@@ -178,7 +179,7 @@
 +//#ifdef __AFL_HAVE_MANUAL_CONTROL
 +    //__AFL_INIT();
 +    if (getenv("NO_FUZZ") == NULL) {
-+        unsh();
++        //unsh();
 +        LAUNCHTHR(process);
 +    }
 +//#endif
@@ -187,7 +188,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +902,11 @@
+@@ -742,7 +903,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -200,7 +201,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +914,9 @@
+@@ -750,6 +915,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
