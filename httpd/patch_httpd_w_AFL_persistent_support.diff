@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 15:45:59.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 15:52:46.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,8 +505,140 @@
+@@ -482,22 +505,164 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -38,8 +38,8 @@
 +// AFL++ SNIP
 +    destroy_and_exit_process(process, 0);
 +// AFL++ EOS
-+}
-+
+ }
+ 
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
@@ -63,7 +63,6 @@
 +    //unsigned char *buf;
 +
 +    printf("[+] Initializing __AFL_LOOP(%d)", iterations);
-+    __AFL_FUZZ_INIT();
 +    __AFL_INIT();
 +    unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
 +    printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
@@ -167,12 +166,14 @@
 +      printf("Tearing down parent process gracefully (BUT w/ ERRORS)...\n");
 +      destroy_and_exit_process(process, 0);
 +    }
- }
++}
++
++__AFL_FUZZ_INIT();
 +// AFL++ EOS
- 
++
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
-@@ -491,13 +646,22 @@
+ #else
   int main(int argc, const char *const *argv)
  #endif
  {
@@ -196,7 +197,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +906,11 @@
+@@ -742,7 +907,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -209,7 +210,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +918,9 @@
+@@ -750,6 +919,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
