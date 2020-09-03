@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 12:30:47.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 12:43:56.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +505,152 @@
+@@ -482,22 +505,146 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -60,6 +60,7 @@
 +    while ( __AFL_LOOP(iterations) ){
 +        printf("=> memset BUFSIZE to buf\n");
 +        memset(buf, 0, BUFSIZE);
++        print ("did I get here?\n");
 +        size_t read_bytes = read(0, buf, BUFSIZE);
 +        buf[BUFSIZE-2] = '\r';
 +        buf[BUFSIZE-1] = '\n';
@@ -140,20 +141,13 @@
 +    err = pthread_create(&t, &attr, INIT_AFL_MUTATION_SESSION, process);
 +    if (err == 0) {
 +      printf("INFO: AFL++ mutation thread successfully created.\n");
++      printf("Tearing down parent process gracefully...\n");
++      destroy_and_exit_process(process, 0);
 +    } else {
 +      printf("ERROR: Unable to initialize AFL++ mutation thread.\n");
-+      exit(1);
++      printf("Tearing down parent process gracefully (BUT w/ ERRORS)...\n");
++      destroy_and_exit_process(process, 0);
 +    }
-+
-+    //err = pthread_join(t, &tret);
-+    //if (err == 0) {
-+    //  printf("INFO: AFL++ mutation thread successfully joined.\n");
-+    //} else {
-+    //  printf("ERROR %ld: Unable to join AFL++ mutation thread.\n", (long)tret);
-+    //  exit(1);
-+   //}
-+   printf("Tearing down parent process gracefully...\n");
-+   destroy_and_exit_process(process, 0);
  }
  
 +//__AFL_FUZZ_INIT();
@@ -185,7 +179,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +895,11 @@
+@@ -742,7 +889,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -198,7 +192,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +907,9 @@
+@@ -750,6 +901,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
