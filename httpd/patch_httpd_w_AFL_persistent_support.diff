@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 16:08:08.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 16:19:16.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -32,7 +32,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +507,157 @@
+@@ -482,8 +507,134 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -40,106 +40,106 @@
 +// AFL++ SNIP
 +    destroy_and_exit_process(process, 0);
 +// AFL++ EOS
- }
- 
++}
++
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
-+    //int BUFSIZE=1024*1024;
-+    //char buf[BUFSIZE+1];
-+    
-+    // DEFINE __AFL_LOOP() MUTATION ITERATIONS
-+    // This may be waaaaay too low but hey let's give it a go...
-+    //int iterations = 10;
-+    // Recommended Default (At least initially)
-+    int iterations = 1000;
-+    //int iterations = 3000;
-+    // This may be waaaaay too high but hey let's give it a go...
-+    //int iterations = 300000;
-+    // This is the max number of iterations 
-+    // per loop if 100% stability is reached
-+    //int iterations = 2147483647;
++  //int BUFSIZE=1024*1024;
++  //char buf[BUFSIZE+1];
 +
-+    // Init Mutated Payload Vars
-+    //ssize_t len;
-+    //unsigned char *buf;
++  // DEFINE __AFL_LOOP() MUTATION ITERATIONS
++  // This may be waaaaay too low but hey let's give it a go...
++  //int iterations = 10;
++  // Recommended Default (At least initially)
++  int iterations = 1000;
++  //int iterations = 3000;
++  // This may be waaaaay too high but hey let's give it a go...
++  //int iterations = 300000;
++  // This is the max number of iterations 
++  // per loop if 100% stability is reached
++  //int iterations = 2147483647;
 +
-+    printf("[+] Initializing __AFL_LOOP(%d)", iterations);
-+    __AFL_INIT();
-+    unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
-+    printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
-+    while ( __AFL_LOOP(iterations) ){
-+        unsigned int len = __AFL_FUZZ_TESTCASE_LEN;
++  // Init Mutated Payload Vars
++  //ssize_t len;
++  //unsigned char *buf;
 +
-+        printf("=> memset len to buf %d\n", len);
++  printf("[+] Initializing __AFL_LOOP(%d)", iterations);
++  __AFL_INIT();
++  unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
++  printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
++  while ( __AFL_LOOP(iterations) ){
++    unsigned int len = __AFL_FUZZ_TESTCASE_LEN;
++
++    printf("=> memset len to buf %d\n", len);
 +/*
-+        memset(buf, 0, len);
-+        size_t read_bytes = read(0, buf, len);
-+        printf("did I get here?\n");
-+        buf[len-2] = '\r';
-+        buf[len-1] = '\n';
-+        buf[len] = '\0';
++    memset(buf, 0, len);
++    size_t read_bytes = read(0, buf, len);
++    printf("did I get here?\n");
++    buf[len-2] = '\r';
++    buf[len-1] = '\n';
++    buf[len] = '\0';
 +
-+        printf("=> init sockfd\n");
-+        int sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-+        if (sockfd == -1) {
-+            printf("[!] sockfd error!\n");
-+            perror("socket");
-+            //_exit(1);
-+            //exit(1);
-+            pthread_exit((void *)1);
-+        }
-+
-+        printf("=> init setsockopt\n");
-+        int sz = (1024 * 1024);
-+        if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz)) == -1) {
-+            printf("[!] setsockopt error!\n");
-+            perror("setsockopt");
-+            //exit(1);
-+            pthread_exit((void *)1);
-+        }
-+
-+        printf("=> connecting to tcp port 80\n", buf);
-+
-+        struct sockaddr_in saddr;
-+        saddr.sin_family = AF_INET;
-+        saddr.sin_port = htons(80);
-+        saddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-+        if (connect(sockfd, &saddr, sizeof(saddr)) == -1) {
-+            printf("[!] connect error!\n");
-+            perror("connect");
-+            continue;
-+        }
-+
-+        printf("=> sending buf %s\n", buf);
-+        if (send(sockfd, buf, read_bytes, MSG_NOSIGNAL) != read_bytes) {
-+            printf("[!] failed to send payload!\n");
-+            perror("send() failed 1");
-+            //exit(1);
-+            pthread_exit((void *)1);
-+        }
-+
-+        printf("=> buf sent %s\n", &buf);
-+
-+        if (shutdown(sockfd, SHUT_WR) == -1) {
-+            printf("[!] failed to shutdown sockfd!\n");
-+            perror("shutdown");
-+            //exit(1);
-+            pthread_exit((void *)1);
-+        }
-+
-+        char b[1024 * 1024];
-+        while (recv(sockfd, b, sizeof(b), MSG_WAITALL) > 0) ;
-+        printf("=> received from sockfd %s\n", b);
-+
-+        printf("=> closing sockfd\n");
-+        close(sockfd);
-+        printf("=> successfully closed sockfd\n");
++    printf("=> init sockfd\n");
++    int sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
++    if (sockfd == -1) {
++      printf("[!] sockfd error!\n");
++      perror("socket");
++      //_exit(1);
++      //exit(1);
++      pthread_exit((void *)1);
 +    }
++
++    printf("=> init setsockopt\n");
++    int sz = (1024 * 1024);
++    if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz)) == -1) {
++      printf("[!] setsockopt error!\n");
++      perror("setsockopt");
++      //exit(1);
++      pthread_exit((void *)1);
++    }
++
++    printf("=> connecting to tcp port 80\n", buf);
++
++    struct sockaddr_in saddr;
++    saddr.sin_family = AF_INET;
++    saddr.sin_port = htons(80);
++    saddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
++    if (connect(sockfd, &saddr, sizeof(saddr)) == -1) {
++      printf("[!] connect error!\n");
++      perror("connect");
++      continue;
++    }
++
++    printf("=> sending buf %s\n", buf);
++    if (send(sockfd, buf, read_bytes, MSG_NOSIGNAL) != read_bytes) {
++      printf("[!] failed to send payload!\n");
++      perror("send() failed 1");
++      //exit(1);
++      pthread_exit((void *)1);
++    }
++
++    printf("=> buf sent %s\n", &buf);
++
++    if (shutdown(sockfd, SHUT_WR) == -1) {
++      printf("[!] failed to shutdown sockfd!\n");
++      perror("shutdown");
++      //exit(1);
++      pthread_exit((void *)1);
++    }
++
++    char b[1024 * 1024];
++    while (recv(sockfd, b, sizeof(b), MSG_WAITALL) > 0) ;
++      printf("=> received from sockfd %s\n", b);
++
++      printf("=> closing sockfd\n");
++      close(sockfd);
++      printf("=> successfully closed sockfd\n");
 +*/
-+    printf("[+] __AFL_LOOP(%d) COMPLETE.\n", iterations);
-+    printf("INFO: Tearing down AFL++ mutation thread gracefully...\n");
-+    pthread_exit((void *)0);
++  }
++  printf("[+] __AFL_LOOP(%d) COMPLETE.\n", iterations);
++  printf("INFO: Tearing down AFL++ mutation thread gracefully...\n");
++  pthread_exit((void *)0);
 +}
 +
 +static void INIT_AFL_THREAD(process_rec *process)
@@ -147,7 +147,7 @@
 +    int err;
 +    pthread_t t;
 +    pthread_attr_t attr;
-+    void *tret;
++    void *tret; // Need a pthread_join to take advantage of thread return codes
 +
 +    pthread_attr_init(&attr);
 +    pthread_attr_setstacksize(&attr, 1024 * 1024 * 8);
@@ -161,14 +161,14 @@
 +    } else {
 +      printf("ERROR: Unable to initialize AFL++ mutation thread.\n");
 +      printf("Tearing down parent process gracefully (BUT w/ ERRORS)...\n");
-+      destroy_and_exit_process(process, 0);
++      destroy_and_exit_process(process, 1);
 +    }
-+}
+ }
 +// AFL++ EOS
-+
+ 
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
- #else
+@@ -491,13 +642,22 @@
   int main(int argc, const char *const *argv)
  #endif
  {
