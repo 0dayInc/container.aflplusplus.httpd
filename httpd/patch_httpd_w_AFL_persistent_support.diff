@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 10:50:44.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 11:00:55.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +505,157 @@
+@@ -482,15 +505,141 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -169,8 +169,23 @@
   int main(int argc, const char *const *argv)
  #endif
  {
++
+     char c;
+     int showcompile = 0, showdirectives = 0;
+     const char *confname = SERVER_CONFIG_FILE;
+@@ -498,6 +647,7 @@
+     const char *temp_error_log = NULL;
+     const char *error;
+     process_rec *process;
++
+     apr_pool_t *pconf;
+     apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
+     apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
+@@ -517,6 +667,14 @@
+     ap_server_argv0 = process->short_name;
+     ap_init_rng(ap_pglobal);
+ 
 +    // AFL++ SNIP
-+    process_rec *process;
 +    if (getenv("CRASH_TEST") == NULL) {
 +      INIT_AFL_THREAD(process);
 +    } else {
@@ -178,18 +193,9 @@
 +    }
 +    // AFL++ EOS
 +
-+
-     char c;
-     int showcompile = 0, showdirectives = 0;
-     const char *confname = SERVER_CONFIG_FILE;
-     const char *def_server_root = HTTPD_ROOT;
-     const char *temp_error_log = NULL;
-     const char *error;
--    process_rec *process;
-+
-     apr_pool_t *pconf;
-     apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
-     apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
+     /* Set up the OOM callback in the global pool, so all pools should
+      * by default inherit it. */
+     apr_pool_abort_set(abort_on_oom, apr_pool_parent_get(process->pool));
 @@ -742,7 +900,11 @@
  
      /* If our config failed, deal with that here. */
