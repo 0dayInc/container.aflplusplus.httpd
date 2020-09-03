@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 16:39:42.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 16:49:46.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -32,7 +32,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,9 +507,138 @@
+@@ -482,8 +507,134 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -45,8 +45,6 @@
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
-+  // Sleep for 3 seconds prior to proceeding to give httpd a chance to load
-+  usleep(3000000);
 +  //int BUFSIZE=1024*1024;
 +  //char buf[BUFSIZE+1];
 +
@@ -140,10 +138,10 @@
 +*/
 +  }
 +  printf("[+] EXITING __AFL_LOOP(%d)\n", iterations);
-+  printf("INFO: EXIT AFL++ mutation thread...\n");
++  printf("INFO: EXITING AFL++ mutation thread...\n");
 +  pthread_exit((void *)0);
- }
- 
++}
++
 +static void INIT_AFL_THREAD(process_rec *process)
 +{
 +    int err;
@@ -155,24 +153,22 @@
 +    pthread_attr_setstacksize(&attr, 1024 * 1024 * 8);
 +    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 +
-+    printf("INFO: CREATE AFL++ mutation thread...\n");
++    printf("INFO: CREATING AFL++ mutation thread...\n");
 +    err = pthread_create(&t, &attr, INIT_AFL_MUTATION_SESSION, process);
 +    if (err == 0) {
-+      printf("INFO: AFL++ mutation thread successfully created.\n");
 +      printf("Tearing down parent process gracefully...\n");
 +      destroy_and_exit_process(process, 0);
 +    } else {
-+      printf("ERROR: Unable to initialize AFL++ mutation thread.\n");
++      printf("ERROR %d: Unable to CREATE AFL++ mutation thread.\n", err);
 +      printf("Tearing down parent process gracefully (BUT w/ ERRORS)...\n");
-+      destroy_and_exit_process(process, 1);
++      destroy_and_exit_process(process, err);
 +    }
-+}
+ }
 +// AFL++ EOS
-+
+ 
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
- #else
-@@ -498,6 +652,7 @@
+@@ -498,6 +649,7 @@
      const char *temp_error_log = NULL;
      const char *error;
      process_rec *process;
@@ -180,7 +176,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -512,6 +667,14 @@
+@@ -512,6 +664,14 @@
      AP_MONCONTROL(0); /* turn off profiling of startup */
  
      process = init_process(&argc, &argv);
@@ -195,7 +191,7 @@
      ap_pglobal = process->pool;
      pconf = process->pconf;
      ap_server_argv0 = process->short_name;
-@@ -742,7 +905,11 @@
+@@ -742,7 +902,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -208,7 +204,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +917,9 @@
+@@ -750,6 +914,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
