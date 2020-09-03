@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 15:56:11.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 16:08:08.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -32,7 +32,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +507,162 @@
+@@ -482,22 +507,157 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -45,7 +45,7 @@
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
-+    //int B//UFSIZE=1024*1024;
++    //int BUFSIZE=1024*1024;
 +    //char buf[BUFSIZE+1];
 +    
 +    // DEFINE __AFL_LOOP() MUTATION ITERATIONS
@@ -71,17 +71,11 @@
 +    while ( __AFL_LOOP(iterations) ){
 +        unsigned int len = __AFL_FUZZ_TESTCASE_LEN;
 +
-+        //printf("=> memset BUFSIZE to buf %d\n", BUFSIZE);
 +        printf("=> memset len to buf %d\n", len);
-+        //memset(buf, 0, BUFSIZE);
++/*
 +        memset(buf, 0, len);
-+        //size_t read_bytes = read(0, buf, BUFSIZE);
-+        //size_t read_bytes = read(0, buf, len);
 +        size_t read_bytes = read(0, buf, len);
 +        printf("did I get here?\n");
-+        //buf[BUFSIZE-2] = '\r';
-+        //buf[BUFSIZE-1] = '\n';
-+        //buf[BUFSIZE] = '\0';
 +        buf[len-2] = '\r';
 +        buf[len-1] = '\n';
 +        buf[len] = '\0';
@@ -142,6 +136,7 @@
 +        close(sockfd);
 +        printf("=> successfully closed sockfd\n");
 +    }
++*/
 +    printf("[+] __AFL_LOOP(%d) COMPLETE.\n", iterations);
 +    printf("INFO: Tearing down AFL++ mutation thread gracefully...\n");
 +    pthread_exit((void *)0);
@@ -197,7 +192,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +907,11 @@
+@@ -742,7 +902,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -210,7 +205,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +919,9 @@
+@@ -750,6 +914,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
