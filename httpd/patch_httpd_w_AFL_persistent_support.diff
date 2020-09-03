@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 12:57:36.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 13:56:54.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +505,146 @@
+@@ -482,22 +505,149 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -43,8 +43,8 @@
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
-+    int BUFSIZE=1024*1024;
-+    char buf[BUFSIZE+1];
++    //int BUFSIZE=1024*1024;
++    //char buf[BUFSIZE+1];
 +    
 +    // DEFINE __AFL_LOOP() MUTATION ITERATIONS
 +    // This may be waaaaay too low but hey let's give it a go...
@@ -55,9 +55,12 @@
 +    // This may be waaaaay too high but hey let's give it a go...
 +    //int iterations = 300000;
 +
++    unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF
 +    printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
 +    //__AFL_INIT();
 +    while ( __AFL_LOOP(iterations) ){
++        int BUFSIZE = __AFL_FUZZ_TESTCASE_LEN;
++
 +        printf("=> memset BUFSIZE to buf\n");
 +        memset(buf, 0, BUFSIZE);
 +        size_t read_bytes = read(0, buf, BUFSIZE);
@@ -179,7 +182,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +889,11 @@
+@@ -742,7 +892,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -192,7 +195,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +901,9 @@
+@@ -750,6 +904,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
