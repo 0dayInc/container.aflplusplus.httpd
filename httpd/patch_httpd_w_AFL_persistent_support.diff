@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 16:31:22.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 16:39:42.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -32,7 +32,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +507,159 @@
+@@ -482,9 +507,138 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -40,8 +40,8 @@
 +// AFL++ SNIP
 +    destroy_and_exit_process(process, 0);
 +// AFL++ EOS
- }
- 
++}
++
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
@@ -73,8 +73,8 @@
 +  while ( __AFL_LOOP(iterations) ){
 +    unsigned int len = __AFL_FUZZ_TESTCASE_LEN;
 +
-+    printf("=> memset len to buf %d\n", len);
 +/*
++    printf("=> memset len to buf %d\n", len);
 +    memset(buf, 0, len);
 +    size_t read_bytes = read(0, buf, len);
 +    printf("did I get here?\n");
@@ -139,11 +139,11 @@
 +      printf("=> successfully closed sockfd\n");
 +*/
 +  }
-+  printf("[+] __AFL_LOOP(%d) COMPLETE.\n", iterations);
-+  printf("INFO: Tearing down AFL++ mutation thread gracefully...\n");
++  printf("[+] EXITING __AFL_LOOP(%d)\n", iterations);
++  printf("INFO: EXIT AFL++ mutation thread...\n");
 +  pthread_exit((void *)0);
-+}
-+
+ }
+ 
 +static void INIT_AFL_THREAD(process_rec *process)
 +{
 +    int err;
@@ -155,6 +155,7 @@
 +    pthread_attr_setstacksize(&attr, 1024 * 1024 * 8);
 +    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 +
++    printf("INFO: CREATE AFL++ mutation thread...\n");
 +    err = pthread_create(&t, &attr, INIT_AFL_MUTATION_SESSION, process);
 +    if (err == 0) {
 +      printf("INFO: AFL++ mutation thread successfully created.\n");
@@ -171,11 +172,19 @@
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
  #else
-  int main(int argc, const char *const *argv)
- #endif
- {
+@@ -498,6 +652,7 @@
+     const char *temp_error_log = NULL;
+     const char *error;
+     process_rec *process;
++
+     apr_pool_t *pconf;
+     apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
+     apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
+@@ -512,6 +667,14 @@
+     AP_MONCONTROL(0); /* turn off profiling of startup */
+ 
+     process = init_process(&argc, &argv);
 +    // AFL++ SNIP
-+    process_rec *process;
 +    if (getenv("CRASH_TEST") == NULL) {
 +      INIT_AFL_THREAD(process);
 +    } else {
@@ -183,18 +192,10 @@
 +    }
 +    // AFL++ EOS
 +
-     char c;
-     int showcompile = 0, showdirectives = 0;
-     const char *confname = SERVER_CONFIG_FILE;
-     const char *def_server_root = HTTPD_ROOT;
-     const char *temp_error_log = NULL;
-     const char *error;
--    process_rec *process;
-+
-     apr_pool_t *pconf;
-     apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
-     apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +904,11 @@
+     ap_pglobal = process->pool;
+     pconf = process->pconf;
+     ap_server_argv0 = process->short_name;
+@@ -742,7 +905,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -207,7 +208,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +916,9 @@
+@@ -750,6 +917,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
