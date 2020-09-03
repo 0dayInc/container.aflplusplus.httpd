@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 11:00:55.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 11:14:49.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,15 +505,141 @@
+@@ -482,22 +505,151 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -43,12 +43,6 @@
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
-+
-+    // Wait for httpd Daemon to spin up prior 
-+    // to starting __AFL_LOOP()
-+    printf("Waiting for httpd ready prior to AFL_LOOP() init...\n");
-+    usleep(3000000);
-+
 +    int BUFSIZE=1024*1024;
 +    char buf[BUFSIZE+1];
 +    
@@ -155,9 +149,10 @@
 +    if (thread_ret == 0) {
 +      printf("INFO: AFL++ mutation thread successfully exited.\n");
 +    } else {
-+      printf("ERROR: Unable to terminate AFL++ mutation thread.\n");
++      printf("ERROR %d: Unable to terminate AFL++ mutation thread.\n", thread_ret);
 +   }
-+   destroy_and_exit_process(process, thread_ret);
++   //destroy_and_exit_process(process, thread_ret);
++   exit(thread_ret);
  }
  
 +//__AFL_FUZZ_INIT();
@@ -169,23 +164,8 @@
   int main(int argc, const char *const *argv)
  #endif
  {
-+
-     char c;
-     int showcompile = 0, showdirectives = 0;
-     const char *confname = SERVER_CONFIG_FILE;
-@@ -498,6 +647,7 @@
-     const char *temp_error_log = NULL;
-     const char *error;
-     process_rec *process;
-+
-     apr_pool_t *pconf;
-     apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
-     apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -517,6 +667,14 @@
-     ap_server_argv0 = process->short_name;
-     ap_init_rng(ap_pglobal);
- 
 +    // AFL++ SNIP
++    process_rec *process;
 +    if (getenv("CRASH_TEST") == NULL) {
 +      INIT_AFL_THREAD(process);
 +    } else {
@@ -193,10 +173,18 @@
 +    }
 +    // AFL++ EOS
 +
-     /* Set up the OOM callback in the global pool, so all pools should
-      * by default inherit it. */
-     apr_pool_abort_set(abort_on_oom, apr_pool_parent_get(process->pool));
-@@ -742,7 +900,11 @@
+     char c;
+     int showcompile = 0, showdirectives = 0;
+     const char *confname = SERVER_CONFIG_FILE;
+     const char *def_server_root = HTTPD_ROOT;
+     const char *temp_error_log = NULL;
+     const char *error;
+-    process_rec *process;
++
+     apr_pool_t *pconf;
+     apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
+     apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
+@@ -742,7 +894,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -209,7 +197,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +912,9 @@
+@@ -750,6 +906,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
