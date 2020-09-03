@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 11:14:49.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 11:26:13.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +505,151 @@
+@@ -482,22 +505,153 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -124,12 +124,12 @@
 +    //exit(0);
 +    //return 0;
 +    pthread_exit((void *)0);
-+}
-+
+ }
+ 
 +static void INIT_AFL_THREAD(process_rec *process)
 +{
 +    int *ptr[1];
-+    int thread_ret;
++    int err;
 +    pthread_t t;
 +    pthread_attr_t attr;
 +    void *tret;
@@ -138,23 +138,25 @@
 +    pthread_attr_setstacksize(&attr, 1024 * 1024 * 8);
 +    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 +
-+    thread_ret = pthread_create(&t, &attr, INIT_AFL_MUTATION_SESSION, process);
-+    if (thread_ret == 0) {
++    err = pthread_create(&t, &attr, INIT_AFL_MUTATION_SESSION, process);
++    if (err == 0) {
 +      printf("INFO: AFL++ mutation thread successfully created.\n");
 +    } else {
 +      printf("ERROR: Unable to initialize AFL++ mutation thread.\n");
++      exit(1);
 +    }
 +
-+    thread_ret = pthread_join(t, &tret);
-+    if (thread_ret == 0) {
-+      printf("INFO: AFL++ mutation thread successfully exited.\n");
++    err = pthread_join(t, &tret);
++    if (err == 0) {
++      printf("INFO: AFL++ mutation thread successfully joined.\n");
 +    } else {
-+      printf("ERROR %d: Unable to terminate AFL++ mutation thread.\n", thread_ret);
++      printf("ERROR %d: Unable to join mutation thread.\n", (int)tret);
++      exit(1);
 +   }
-+   //destroy_and_exit_process(process, thread_ret);
-+   exit(thread_ret);
- }
- 
++   printf("Tearing down parent process gracefully...");
++   destroy_and_exit_process(process, 0);
++}
++
 +//__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
@@ -184,7 +186,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +894,11 @@
+@@ -742,7 +896,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -197,7 +199,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +906,9 @@
+@@ -750,6 +908,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
