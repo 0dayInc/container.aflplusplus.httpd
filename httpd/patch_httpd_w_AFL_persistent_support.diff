@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 09:08:33.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 09:23:36.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +505,133 @@
+@@ -482,22 +505,135 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -45,7 +45,9 @@
 +{
 +    int BUFSIZE=1024*1024;
 +    char buf[BUFSIZE+1];
-+    int iterations = 3000;
++    //int iterations = 3000;
++    // This may be nuts but hey let's give it a go...
++    int iterations = 300000;
 +    printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
 +    //__AFL_INIT();
 +    while ( __AFL_LOOP(iterations) ){
@@ -133,7 +135,7 @@
 +      printf("INFO: AFL++ mutation thread successfully created.\n");
 +    }
 +
-+    pthread_join(&t, (void**)&(ptr[0]));
++    //pthread_join(&t, (void**)&(ptr[0]));
  }
  
 +//__AFL_FUZZ_INIT();
@@ -166,7 +168,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +876,11 @@
+@@ -742,7 +878,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -179,7 +181,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +888,9 @@
+@@ -750,6 +890,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
