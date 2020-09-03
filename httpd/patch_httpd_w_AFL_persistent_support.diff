@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 14:45:52.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 14:47:54.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -56,7 +56,7 @@
 +    //int iterations = 300000;
 +
 +    __AFL_INIT();
-+    unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF
++    unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
 +    printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
 +    while ( __AFL_LOOP(iterations) ){
 +        int BUFSIZE = __AFL_FUZZ_TESTCASE_LEN;
