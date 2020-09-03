@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 10:36:49.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 10:50:44.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +505,149 @@
+@@ -482,22 +505,157 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -53,7 +53,7 @@
 +    char buf[BUFSIZE+1];
 +    
 +    // This may be waaaaay too low but hey let's give it a go...
-+    int iterations = 100;
++    int iterations = 10;
 +    // Recommended Default (At least initially)
 +    //int iterations = 1000;
 +    //int iterations = 3000;
@@ -74,8 +74,9 @@
 +        if (sockfd == -1) {
 +            printf("[!] sockfd error!\n");
 +            perror("socket");
-+            _exit(1);
++            //_exit(1);
 +            //exit(1);
++            pthread_exit((void *)1);
 +        }
 +
 +        printf("=> init setsockopt\n");
@@ -83,7 +84,8 @@
 +        if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz)) == -1) {
 +            printf("[!] setsockopt error!\n");
 +            perror("setsockopt");
-+            exit(1);
++            //exit(1);
++            pthread_exit((void *)1);
 +        }
 +
 +        printf("=> connecting to tcp port 80\n", buf);
@@ -102,7 +104,8 @@
 +        if (send(sockfd, buf, read_bytes, MSG_NOSIGNAL) != read_bytes) {
 +            printf("[!] failed to send payload!\n");
 +            perror("send() failed 1");
-+            exit(1);
++            //exit(1);
++            pthread_exit((void *)1);
 +        }
 +
 +        printf("=> buf sent %s\n", &buf);
@@ -110,7 +113,8 @@
 +        if (shutdown(sockfd, SHUT_WR) == -1) {
 +            printf("[!] failed to shutdown sockfd!\n");
 +            perror("shutdown");
-+            exit(1);
++            //exit(1);
++            pthread_exit((void *)1);
 +        }
 +
 +        char b[1024 * 1024];
@@ -125,7 +129,7 @@
 +    //_exit(0);
 +    //exit(0);
 +    //return 0;
-+    pthread_exit(0);
++    pthread_exit((void *)0);
 +}
 +
 +static void INIT_AFL_THREAD(process_rec *process)
@@ -134,22 +138,26 @@
 +    int thread_ret;
 +    pthread_t t;
 +    pthread_attr_t attr;
++    void *tret;
 +
 +    pthread_attr_init(&attr);
 +    pthread_attr_setstacksize(&attr, 1024 * 1024 * 8);
 +    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 +
 +    thread_ret = pthread_create(&t, &attr, INIT_AFL_MUTATION_SESSION, process);
-+    if (thread_ret != 0) {
-+      printf("ERROR: Unable to initialize AFL++ mutation thread.\n");
-+    } else {
++    if (thread_ret == 0) {
 +      printf("INFO: AFL++ mutation thread successfully created.\n");
++    } else {
++      printf("ERROR: Unable to initialize AFL++ mutation thread.\n");
 +    }
 +
-+    //pthread_join(&t, (void**)&(ptr[0]));
-+    //pthread_exit(NULL);
-+    printf("INFO: AFL++ mutation thread successfully exited %d.\n", thread_ret);
-+    destroy_and_exit_process(process, 0);
++    thread_ret = pthread_join(t, &tret);
++    if (thread_ret == 0) {
++      printf("INFO: AFL++ mutation thread successfully exited.\n");
++    } else {
++      printf("ERROR: Unable to terminate AFL++ mutation thread.\n");
++   }
++   destroy_and_exit_process(process, thread_ret);
  }
  
 +//__AFL_FUZZ_INIT();
@@ -182,7 +190,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +892,11 @@
+@@ -742,7 +900,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -195,7 +203,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +904,9 @@
+@@ -750,6 +912,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
