@@ -1,6 +1,6 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 15:52:46.000000000 -0600
-@@ -14,6 +14,29 @@
++++ server/main.AFL++.c	2020-09-03 15:56:11.000000000 -0600
+@@ -14,6 +14,31 @@
   * limitations under the License.
   */
  
@@ -25,12 +25,14 @@
 +#include <sys/types.h>
 +#include <sys/wait.h>
 +#include <unistd.h>
++
++__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +505,164 @@
+@@ -482,22 +507,162 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -67,7 +69,7 @@
 +    unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
 +    printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
 +    while ( __AFL_LOOP(iterations) ){
-+        int len = __AFL_FUZZ_TESTCASE_LEN;
++        unsigned int len = __AFL_FUZZ_TESTCASE_LEN;
 +
 +        //printf("=> memset BUFSIZE to buf %d\n", BUFSIZE);
 +        printf("=> memset len to buf %d\n", len);
@@ -167,8 +169,6 @@
 +      destroy_and_exit_process(process, 0);
 +    }
 +}
-+
-+__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
