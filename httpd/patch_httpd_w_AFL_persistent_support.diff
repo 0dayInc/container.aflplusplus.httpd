@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 15:00:16.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 15:07:03.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,8 +505,135 @@
+@@ -482,8 +505,140 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -54,11 +54,16 @@
 +    //int iterations = 3000;
 +    // This may be waaaaay too high but hey let's give it a go...
 +    //int iterations = 300000;
++    // This is the max number of iterations 
++    // per loop if 100% stability is reached
++    //int iterations = 2147483647;
 +
++    // Init Mutated Payload Vars
 +    ssize_t len;
 +    unsigned char *buf;
 +
 +    printf("[+] Initializing __AFL_LOOP(%d)", iterations);
++    __AFL_FUZZ_INIT();
 +    __AFL_INIT();
 +    //unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
 +    printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
@@ -167,14 +172,13 @@
  
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
-@@ -491,13 +641,23 @@
+@@ -491,13 +646,22 @@
   int main(int argc, const char *const *argv)
  #endif
  {
 +    // AFL++ SNIP
 +    process_rec *process;
 +    if (getenv("CRASH_TEST") == NULL) {
-+      __AFL_FUZZ_INIT();
 +      INIT_AFL_THREAD(process);
 +    } else {
 +      printf("[!] Crash Test Mode Initialized:\n");
@@ -192,7 +196,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +902,11 @@
+@@ -742,7 +906,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -205,7 +209,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +914,9 @@
+@@ -750,6 +918,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
