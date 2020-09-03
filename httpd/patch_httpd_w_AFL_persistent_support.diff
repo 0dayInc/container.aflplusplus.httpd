@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 10:04:11.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 10:25:57.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -30,7 +30,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +505,142 @@
+@@ -482,22 +505,143 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -143,6 +143,7 @@
 +    //pthread_join(&t, (void**)&(ptr[0]));
 +    //pthread_exit(NULL);
 +    printf("INFO: AFL++ mutation thread successfully exited %d.\n", thread_ret);
++    destroy_and_exit_process(process, 0);
 +}
 +
 +//__AFL_FUZZ_INIT();
@@ -175,7 +176,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -742,7 +885,11 @@
+@@ -742,7 +886,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -188,7 +189,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +897,9 @@
+@@ -750,6 +898,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
