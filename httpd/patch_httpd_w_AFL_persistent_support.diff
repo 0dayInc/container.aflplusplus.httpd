@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 09:19:23.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 09:23:36.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -135,7 +135,7 @@
 +      printf("INFO: AFL++ mutation thread successfully created.\n");
 +    }
 +
-+    pthread_join(&t, (void**)&(ptr[0]));
++    //pthread_join(&t, (void**)&(ptr[0]));
  }
  
 +//__AFL_FUZZ_INIT();
