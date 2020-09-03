@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 15:07:03.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 15:45:59.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -43,7 +43,7 @@
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
-+    //int BUFSIZE=1024*1024;
++    //int B//UFSIZE=1024*1024;
 +    //char buf[BUFSIZE+1];
 +    
 +    // DEFINE __AFL_LOOP() MUTATION ITERATIONS
@@ -59,16 +59,16 @@
 +    //int iterations = 2147483647;
 +
 +    // Init Mutated Payload Vars
-+    ssize_t len;
-+    unsigned char *buf;
++    //ssize_t len;
++    //unsigned char *buf;
 +
 +    printf("[+] Initializing __AFL_LOOP(%d)", iterations);
 +    __AFL_FUZZ_INIT();
 +    __AFL_INIT();
-+    //unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
++    unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
 +    printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
 +    while ( __AFL_LOOP(iterations) ){
-+        len = __AFL_FUZZ_TESTCASE_LEN;
++        int len = __AFL_FUZZ_TESTCASE_LEN;
 +
 +        //printf("=> memset BUFSIZE to buf %d\n", BUFSIZE);
 +        printf("=> memset len to buf %d\n", len);
