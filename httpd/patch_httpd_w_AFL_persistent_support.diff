@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 09:56:55.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 10:04:11.000000000 -0600
 @@ -14,6 +14,29 @@
   * limitations under the License.
   */
@@ -119,7 +119,7 @@
 +    //_exit(0);
 +    //exit(0);
 +    //return 0;
-+    //pthread_exit(NULL);
++    pthread_exit(NULL);
  }
  
 +static void INIT_AFL_THREAD(process_rec *process)
@@ -141,7 +141,7 @@
 +    }
 +
 +    //pthread_join(&t, (void**)&(ptr[0]));
-+    pthread_exit(NULL);
++    //pthread_exit(NULL);
 +    printf("INFO: AFL++ mutation thread successfully exited %d.\n", thread_ret);
 +}
 +
