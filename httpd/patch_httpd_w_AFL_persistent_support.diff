@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 13:01:04.000000000 -0600
++++ server/main.AFL++.c	2020-09-04 13:55:42.000000000 -0600
 @@ -14,6 +14,43 @@
   * limitations under the License.
   */
@@ -44,7 +44,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +519,162 @@
+@@ -482,8 +519,127 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -52,8 +52,8 @@
 +// AFL++ SNIP
 +    destroy_and_exit_process(process, 0);
 +// AFL++ EOS
- }
- 
++}
++
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
@@ -150,7 +150,6 @@
 +    printf("[+] REMOVED %s\n", DEFAULT_PIDLOG);
 +    _exit(0);
 +  }
-+  printf("[*]: EXITING AFL++ mutation thread && parent process gracefully...\n");
 +}
 +
 +static void INIT_AFL_THREAD(process_rec *process)
@@ -169,22 +168,12 @@
 +      printf("[!] Tearing down parent process gracefully...\n");
 +      destroy_and_exit_process(process, err);
 +    }
-+
-+    //err = pthread_join(t, &tret);
-+    //if (err == 0) {
-+    //  printf("Tearing down parent process gracefully...\n");
-+    //  destroy_and_exit_process(process, 0);
-+    //} else {
-+    //  printf("[!] %d: Unable to JOIN AFL++ mutation thread.\n", err);
-+    //  printf("[!] Tearing down parent process gracefully...\n");
-+    //  destroy_and_exit_process(process, err);
-+    //}
-+}
+ }
 +// AFL++ EOS
-+
+ 
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
- #else
+@@ -491,13 +647,23 @@
   int main(int argc, const char *const *argv)
  #endif
  {
@@ -209,7 +198,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -750,6 +927,9 @@
+@@ -750,6 +916,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
