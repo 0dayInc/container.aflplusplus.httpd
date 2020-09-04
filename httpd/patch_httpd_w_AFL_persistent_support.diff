@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 12:57:22.000000000 -0600
++++ server/main.AFL++.c	2020-09-04 13:01:04.000000000 -0600
 @@ -14,6 +14,43 @@
   * limitations under the License.
   */
@@ -146,7 +146,7 @@
 +  if ( remove("/fuzz_session/httpd/logs/httpd.pid") != 0 ) {
 +    printf("[!] Ugh, unable to remove %s", DEFAULT_PIDLOG);
 +    _exit(1);
-+  else
++  } else {
 +    printf("[+] REMOVED %s\n", DEFAULT_PIDLOG);
 +    _exit(0);
 +  }
