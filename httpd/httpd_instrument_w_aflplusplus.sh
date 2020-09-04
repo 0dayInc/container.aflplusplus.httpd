@@ -13,6 +13,8 @@ afl_output="${afl_session_root}/multi_sync"
 httpd_repo="${fuzz_session_root}/httpd_src"
 httpd_prefix="${fuzz_session_root}/httpd"
 
+vanilla_httpd_conf="${docker_repo_root}/httpd/conf/VANILLA.httpd.conf"
+
 if [[ -d $httpd_repo ]]; then
   rm -rf $httpd_repo
 fi
@@ -95,3 +97,4 @@ cd $httpd_repo && CC=$preferred_afl CXX=$preferred_aflplusplus RANLIB=$preferred
 cd ${httpd_repo} && CC=$preferred_afl CXX=$preferred_aflplusplus RANLIB=$preferred_afl_ranlib AR=$preferred_afl_ar NM=$preferred_afl_nm ./configure --prefix=$httpd_prefix
 cd ${httpd_repo} && CC=$preferred_afl CXX=$preferred_aflplusplus RANLIB=$preferred_afl_ranlib AR=$preferred_afl_ar NM=$preferred_afl_nm make
 cd ${httpd_repo} && make install
+cp $vanilla_httpd_conf $httpd_prefix/conf/httpd.conf

@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 18:49:52.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 19:22:18.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -32,7 +32,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,9 +507,145 @@
+@@ -482,8 +507,142 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -64,12 +64,14 @@
 +  //ssize_t len;
 +  //unsigned char *buf;
 +
-+  printf("[+] Initializing __AFL_LOOP(%d)\n", iterations);
-+  __AFL_INIT();
++  //printf("[+] Initializing __AFL_LOOP(%d)\n", iterations);
++  //__AFL_INIT();
 +  unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
 +  printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
 +  while ( __AFL_LOOP(iterations) ){
 +    unsigned int len = __AFL_FUZZ_TESTCASE_LEN;
++
++    printf('.');
 +
 +    printf("=> memset len to buf %d\n", len);
 +    memset(buf, 0, len);
@@ -101,21 +103,18 @@
 +    }
 +
 +    printf("=> connecting to tcp port 80\n", buf);
-+
 +    struct sockaddr_in saddr;
 +    saddr.sin_family = AF_INET;
 +    saddr.sin_port = htons(80);
 +    saddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 +    if (connect(sockfd, &saddr, sizeof(saddr)) == -1) {
-+      printf("[!] connect error!\n");
-+      perror("connect");
++      printf("[!] Failed to connect do sockfd!\n");
 +      continue;
 +    }
 +
 +    printf("=> sending buf %s\n", buf);
 +    if (send(sockfd, buf, read_bytes, MSG_NOSIGNAL) != read_bytes) {
-+      printf("[!] failed to send payload!\n");
-+      perror("send() failed 1");
++      printf("[!] Failed to send payload over sockfd!\n");
 +      //exit(1);
 +      //pthread_exit((void *)1);
 +      destroy_and_exit_process(process, 1);
@@ -124,8 +123,7 @@
 +    printf("=> buf sent %s\n", &buf);
 +
 +    if (shutdown(sockfd, SHUT_WR) == -1) {
-+      printf("[!] failed to shutdown sockfd!\n");
-+      perror("shutdown");
++      perror("[!] failed to shutdown sockfd!\n");
 +      //exit(1);
 +      //pthread_exit((void *)1);
 +      destroy_and_exit_process(process, 1);
@@ -144,8 +142,8 @@
 +  printf("[*]: EXITING AFL++ mutation thread && parent process gracefully...\n");
 +  //pthread_exit((void *)0);
 +  destroy_and_exit_process(process, 0);
- }
- 
++}
++
 +static void INIT_AFL_THREAD(process_rec *process)
 +{
 +    pthread_t t;
@@ -173,13 +171,22 @@
 +    //  printf("[!] Tearing down parent process gracefully...\n");
 +    //  destroy_and_exit_process(process, err);
 +    //}
-+}
+ }
 +// AFL++ EOS
-+
+ 
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
- #else
-@@ -498,6 +659,7 @@
+@@ -491,6 +650,9 @@
+  int main(int argc, const char *const *argv)
+ #endif
+ {
++    printf("[+] Initializing __AFL_LOOP(%d)\n", iterations);
++    __AFL_INIT();
++
+     char c;
+     int showcompile = 0, showdirectives = 0;
+     const char *confname = SERVER_CONFIG_FILE;
+@@ -498,6 +660,7 @@
      const char *temp_error_log = NULL;
      const char *error;
      process_rec *process;
@@ -187,7 +194,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -512,6 +674,14 @@
+@@ -512,6 +675,14 @@
      AP_MONCONTROL(0); /* turn off profiling of startup */
  
      process = init_process(&argc, &argv);
@@ -202,20 +209,20 @@
      ap_pglobal = process->pool;
      pconf = process->pconf;
      ap_server_argv0 = process->short_name;
-@@ -742,7 +912,11 @@
+@@ -742,7 +913,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
 -        destroy_and_exit_process(process, 1);
 +        // AFL++ SNIP
-+        printf("[-] Config failed...\n");
++        printf("[!] Config failed...\n");
 +        destroy_and_exit_process(process, 0);
 +        // AFL++ EOS        
 +        //destroy_and_exit_process(process, 1);
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +924,9 @@
+@@ -750,6 +925,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
