@@ -1,20 +1,21 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 20:28:58.000000000 -0600
-@@ -14,6 +14,31 @@
++++ server/main.AFL++.c	2020-09-04 15:46:12.000000000 -0600
+@@ -14,6 +14,44 @@
   * limitations under the License.
   */
  
 +// AFL++ SNIP
-+#include <sched.h>
-+#include <linux/sched.h>
 +#include <arpa/inet.h>
 +#include <errno.h>
++#include <linux/sched.h>
 +#include <net/if.h>
 +#include <net/route.h>
 +#include <netinet/ip6.h>
 +#include <netinet/tcp.h>
-+#include <stdio.h>
++#include <sched.h>
++#include <signal.h>
 +#include <stdint.h>
++#include <stdio.h>
 +#include <stdlib.h>
 +#include <string.h>
 +#include <strings.h>
@@ -25,6 +26,18 @@
 +#include <sys/types.h>
 +#include <sys/wait.h>
 +#include <unistd.h>
++#ifndef __AFL_FUZZ_TESTCASE_LEN
++  unsigned int  fuzz_len = 1024 * 1024;
++  unsigned char fuzz_buf[fuzz_len+1];
++  unsigned int iterations = 1000;
++
++  #define __AFL_FUZZ_TESTCASE_LEN fuzz_len
++  #define __AFL_FUZZ_TESTCASE_BUF fuzz_buf
++  #define __AFL_FUZZ_INIT() void sync(void);
++  #define __AFL_LOOP(iterations) ((fuzz_len = read(0, fuzz_buf, sizeof(fuzz_buf))) > 0 ?
++  #define __AFL_INIT() sync()
++
++#endif
 +
 +__AFL_FUZZ_INIT();
 +// AFL++ EOS
@@ -32,7 +45,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,15 +507,150 @@
+@@ -482,8 +520,130 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -45,53 +58,46 @@
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
-+  //int BUFSIZE=1024*1024;
-+  //char buf[BUFSIZE+1];
-+
 +  // DEFINE __AFL_LOOP() MUTATION ITERATIONS
 +  // This may be waaaaay too low but hey let's give it a go...
-+  //int iterations = 10;
++  //unsigned int iterations = 10;
 +  // Recommended Default (At least initially)
-+  int iterations = 1000;
-+  //int iterations = 3000;
++  unsigned int iterations = 1000;
 +  // This may be waaaaay too high but hey let's give it a go...
-+  //int iterations = 300000;
++  //unsigned int iterations = 300000;
 +  // This is the max number of mutation iterations 
 +  // may be used / loop (if 100% stability is reached)
-+  //int iterations = 2147483647;
++  //unsigned int iterations = 2147483647;
 +
 +  // Init Mutated Payload Vars
-+  //ssize_t len;
-+  //unsigned char *buf;
-+
 +  unsigned int len;
 +  unsigned char *buf;
++
 +  printf("[+]Deferring Initialization for Speed Boost...\n");
 +  __AFL_INIT();
 +  buf = __AFL_FUZZ_TESTCASE_BUF;
 +  printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
 +  while ( __AFL_LOOP(iterations) ){
 +    len = __AFL_FUZZ_TESTCASE_LEN;
-+    if (len == 0) continue;
++    //if (len == 0) continue;
++    printf("before buffer reset:\n");
++    printf("input: %zd \"%s\"\n", len, buf);
 +
-+    printf("=> Resetting buffer to %d\n", len);
++    printf("=> Resetting buffer to %d bytes\n", len);
 +    memset(buf, 0, len);
 +
++    printf("after buffer reset:\n");
++    printf("input: %zd \"%s\"\n", len, buf);
++
++    printf("=> reading next mutation...\n");
 +    unsigned int read_bytes = read(0, buf, len);
-+    
-+    buf[len-2] = '\r';
-+    buf[len-1] = '\n';
-+    buf[len] = '\0';
 +
 +    printf("=> init sockfd\n");
 +    int sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 +    if (sockfd == -1) {
 +      printf("[!] Ugh, sockfd error!\n");
 +      perror("socket");
-+      //_exit(1);
-+      //exit(1);
-+      //pthread_exit((void *)1);
-+      destroy_and_exit_process(process, 1);
++      _exit(1);
 +    }
 +
 +    printf("=> init setsockopt\n");
@@ -99,9 +105,7 @@
 +    if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz)) == -1) {
 +      printf("[!] Ugh, setsockopt error!\n");
 +      perror("setsockopt");
-+      //exit(1);
-+      //pthread_exit((void *)1);
-+      destroy_and_exit_process(process, 1);
++      _exit(1);
 +    }
 +
 +    printf("=> connecting to tcp port 80\n", buf);
@@ -117,20 +121,18 @@
 +    printf("=> sending buf %s\n", buf);
 +    if (send(sockfd, buf, read_bytes, MSG_NOSIGNAL) != read_bytes) {
 +      printf("[!] Ugh, failed to send payload over sockfd!\n");
-+      //exit(1);
-+      //pthread_exit((void *)1);
-+      destroy_and_exit_process(process, 1);
++      _exit(1);
 +    }
 +
 +    printf("=> buf sent %s\n", &buf);
 +
 +    if (shutdown(sockfd, SHUT_WR) == -1) {
 +      perror("[!] Ugh, failed to shutdown sockfd!\n");
-+      //exit(1);
-+      //pthread_exit((void *)1);
-+      destroy_and_exit_process(process, 1);
++      _exit(1);
 +    }
 +
++    // Consume HTTP Response
++    printf("=> HTTP response:\n");
 +    char b[1024 * 1024];
 +    while (recv(sockfd, b, sizeof(b), MSG_WAITALL) > 0) ;
 +      printf("=> Received from sockfd %s\n", b);
@@ -140,11 +142,20 @@
 +      printf("=> successfully closed sockfd\n");
 +  }
 +  printf("[+] EXITING __AFL_LOOP(%d)\n", iterations);
-+  printf("[*]: EXITING AFL++ mutation thread && parent process gracefully...\n");
-+  //pthread_exit((void *)0);
-+  destroy_and_exit_process(process, 0);
- }
- 
++
++  int rem_pidlog;
++  printf("Remove DEFAULT_PIDLOG\n");
++  rem_pidlog = remove("/fuzz_session/httpd/logs/httpd.pid");
++  printf("rem_pidlog response: %d", rem_pidlog);
++  if ( rem_pidlog != 0 ) {
++    printf("[!] Ugh, unable to remove %s", DEFAULT_PIDLOG);
++    _exit(1);
++  } else {
++    printf("[+] REMOVED %s\n", DEFAULT_PIDLOG);
++    _exit(0);
++  }
++}
++
 +static void INIT_AFL_THREAD(process_rec *process)
 +{
 +    pthread_t t;
@@ -161,42 +172,18 @@
 +      printf("[!] Tearing down parent process gracefully...\n");
 +      destroy_and_exit_process(process, err);
 +    }
-+
-+    //err = pthread_join(t, &tret);
-+    //if (err == 0) {
-+    //  printf("Tearing down parent process gracefully...\n");
-+    //  destroy_and_exit_process(process, 0);
-+    //} else {
-+    //  printf("[!] %d: Unable to JOIN AFL++ mutation thread.\n", err);
-+    //  printf("[!] Tearing down parent process gracefully...\n");
-+    //  destroy_and_exit_process(process, err);
-+    //}
-+}
+ }
 +// AFL++ EOS
-+
+ 
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
- #else
+@@ -491,13 +651,23 @@
   int main(int argc, const char *const *argv)
  #endif
  {
 +
-     char c;
-     int showcompile = 0, showdirectives = 0;
-     const char *confname = SERVER_CONFIG_FILE;
-@@ -498,6 +658,7 @@
-     const char *temp_error_log = NULL;
-     const char *error;
-     process_rec *process;
-+
-     apr_pool_t *pconf;
-     apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
-     apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -512,6 +673,14 @@
-     AP_MONCONTROL(0); /* turn off profiling of startup */
- 
-     process = init_process(&argc, &argv);
 +    // AFL++ SNIP
++    process_rec *process;
 +    if (getenv("CRASH_TEST") == NULL) {
 +      INIT_AFL_THREAD(process);
 +    } else {
@@ -204,10 +191,18 @@
 +    }
 +    // AFL++ EOS
 +
-     ap_pglobal = process->pool;
-     pconf = process->pconf;
-     ap_server_argv0 = process->short_name;
-@@ -750,6 +919,9 @@
+     char c;
+     int showcompile = 0, showdirectives = 0;
+     const char *confname = SERVER_CONFIG_FILE;
+     const char *def_server_root = HTTPD_ROOT;
+     const char *temp_error_log = NULL;
+     const char *error;
+-    process_rec *process;
++
+     apr_pool_t *pconf;
+     apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
+     apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
+@@ -750,6 +920,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
