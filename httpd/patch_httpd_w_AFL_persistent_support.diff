@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 14:11:00.000000000 -0600
++++ server/main.AFL++.c	2020-09-04 14:20:52.000000000 -0600
 @@ -14,6 +14,43 @@
   * limitations under the License.
   */
@@ -80,8 +80,8 @@
 +  while ( __AFL_LOOP(iterations) ){
 +    len = __AFL_FUZZ_TESTCASE_LEN;
 +    //if (len == 0) continue;
-+    //printf("=> Resetting buffer to %d\n", len);
-+    //memset(buf, 0, len);
++    printf("=> Resetting buffer to %d\n", len);
++    memset(buf, 0, len);
 +
 +    printf("=> reading next mutation...\n");
 +    unsigned int read_bytes = read(0, buf, len);
