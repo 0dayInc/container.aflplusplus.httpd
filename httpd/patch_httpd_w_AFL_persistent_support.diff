@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 18:34:52.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 18:49:52.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -32,7 +32,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,9 +507,144 @@
+@@ -482,9 +507,145 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -71,7 +71,6 @@
 +  while ( __AFL_LOOP(iterations) ){
 +    unsigned int len = __AFL_FUZZ_TESTCASE_LEN;
 +
-+/*
 +    printf("=> memset len to buf %d\n", len);
 +    memset(buf, 0, len);
 +    size_t read_bytes = read(0, buf, len);
@@ -87,7 +86,8 @@
 +      perror("socket");
 +      //_exit(1);
 +      //exit(1);
-+      pthread_exit((void *)1);
++      //pthread_exit((void *)1);
++      destroy_and_exit_process(process, 1);
 +    }
 +
 +    printf("=> init setsockopt\n");
@@ -96,7 +96,8 @@
 +      printf("[!] setsockopt error!\n");
 +      perror("setsockopt");
 +      //exit(1);
-+      pthread_exit((void *)1);
++      //pthread_exit((void *)1);
++      destroy_and_exit_process(process, 1);
 +    }
 +
 +    printf("=> connecting to tcp port 80\n", buf);
@@ -116,7 +117,8 @@
 +      printf("[!] failed to send payload!\n");
 +      perror("send() failed 1");
 +      //exit(1);
-+      pthread_exit((void *)1);
++      //pthread_exit((void *)1);
++      destroy_and_exit_process(process, 1);
 +    }
 +
 +    printf("=> buf sent %s\n", &buf);
@@ -125,7 +127,8 @@
 +      printf("[!] failed to shutdown sockfd!\n");
 +      perror("shutdown");
 +      //exit(1);
-+      pthread_exit((void *)1);
++      //pthread_exit((void *)1);
++      destroy_and_exit_process(process, 1);
 +    }
 +
 +    char b[1024 * 1024];
@@ -135,7 +138,6 @@
 +      printf("=> closing sockfd\n");
 +      close(sockfd);
 +      printf("=> successfully closed sockfd\n");
-+*/
 +  }
 +  printf("[+] EXITING __AFL_LOOP(%d)\n", iterations);
 +  //printf("[*]: EXITING AFL++ mutation thread...\n");
@@ -146,7 +148,6 @@
  
 +static void INIT_AFL_THREAD(process_rec *process)
 +{
-+    int err;
 +    pthread_t t;
 +    pthread_attr_t attr;
 +    void *tret; // Need a pthread_join to take advantage of thread return codes
@@ -156,7 +157,7 @@
 +    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 +
 +    printf("[*]: CREATING AFL++ mutation thread...\n");
-+    err = pthread_create(&t, &attr, INIT_AFL_MUTATION_SESSION, process);
++    int err = pthread_create(&t, &attr, INIT_AFL_MUTATION_SESSION, process);
 +    if (err != 0) {
 +      printf("[!] %d: Unable to CREATE AFL++ mutation thread.\n", err);
 +      printf("[!] Tearing down parent process gracefully...\n");
@@ -178,7 +179,7 @@
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
  #else
-@@ -498,6 +658,7 @@
+@@ -498,6 +659,7 @@
      const char *temp_error_log = NULL;
      const char *error;
      process_rec *process;
@@ -186,7 +187,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -512,6 +673,14 @@
+@@ -512,6 +674,14 @@
      AP_MONCONTROL(0); /* turn off profiling of startup */
  
      process = init_process(&argc, &argv);
@@ -201,7 +202,7 @@
      ap_pglobal = process->pool;
      pconf = process->pconf;
      ap_server_argv0 = process->short_name;
-@@ -742,7 +911,11 @@
+@@ -742,7 +912,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -214,7 +215,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +923,9 @@
+@@ -750,6 +924,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
