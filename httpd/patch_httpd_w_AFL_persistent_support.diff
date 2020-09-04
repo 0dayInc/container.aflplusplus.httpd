@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 12:04:33.000000000 -0600
++++ server/main.AFL++.c	2020-09-04 12:09:09.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -129,7 +129,7 @@
 +    //len = __AFL_FUZZ_TESTCASE_LEN;
 +  //printf("Removing %s\n", DEFAULT_PIDLOG);
 +  //printf("HTTPD_ROOT %s\n", HTTPD_ROOT);
-+  unlink("/fuzz_session/httpd/logs/%s", DEFAULT_PIDLOG);
++  unlink("/fuzz_session/httpd/logs/httpd.log");
 +   _exit(0);
 +  exit(0);
 +}
