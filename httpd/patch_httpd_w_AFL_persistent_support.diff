@@ -1,6 +1,6 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 16:18:15.000000000 -0600
-@@ -14,6 +14,44 @@
++++ server/main.AFL++.c	2020-09-04 16:30:32.000000000 -0600
+@@ -14,6 +14,42 @@
   * limitations under the License.
   */
  
@@ -38,14 +38,12 @@
 +  #define __AFL_INIT() sync()
 +
 +#endif
-+
-+__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,8 +520,130 @@
+@@ -482,22 +518,158 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -150,10 +148,9 @@
 +  if ( rem_pidlog != 0 ) {
 +    printf("[!] Ugh, unable to remove %s", DEFAULT_PIDLOG);
 +    _exit(1);
-+  } else {
-+    printf("[+] REMOVED %s\n", DEFAULT_PIDLOG);
-+    _exit(0);
 +  }
++  printf("[+] REMOVED %s\n", DEFAULT_PIDLOG);
++  _exit(0);
 +}
 +
 +static void INIT_AFL_THREAD(process_rec *process)
@@ -173,15 +170,20 @@
 +      destroy_and_exit_process(process, err);
 +    }
  }
-+// AFL++ EOS
  
++__AFL_FUZZ_INIT();
++// AFL++ EOS
++
++
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
-@@ -491,13 +651,23 @@
+ #else
   int main(int argc, const char *const *argv)
  #endif
  {
-+
++#ifdef __AFL_HAVE_MANUAL_CONTROL
++  __AFL_INIT();
++#endif
 +    // AFL++ SNIP
 +    process_rec *process;
 +    if (getenv("CRASH_TEST") == NULL) {
@@ -202,7 +204,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -750,6 +920,9 @@
+@@ -750,6 +922,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
