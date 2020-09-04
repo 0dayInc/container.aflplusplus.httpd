@@ -1,6 +1,6 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 15:32:52.000000000 -0600
-@@ -14,6 +14,43 @@
++++ server/main.AFL++.c	2020-09-04 15:46:12.000000000 -0600
+@@ -14,6 +14,44 @@
   * limitations under the License.
   */
  
@@ -27,13 +27,14 @@
 +#include <sys/wait.h>
 +#include <unistd.h>
 +#ifndef __AFL_FUZZ_TESTCASE_LEN
-+  unsigned int  fuzz_len;
-+  unsigned char fuzz_buf[1048576];
++  unsigned int  fuzz_len = 1024 * 1024;
++  unsigned char fuzz_buf[fuzz_len+1];
++  unsigned int iterations = 1000;
 +
 +  #define __AFL_FUZZ_TESTCASE_LEN fuzz_len
 +  #define __AFL_FUZZ_TESTCASE_BUF fuzz_buf
 +  #define __AFL_FUZZ_INIT() void sync(void);
-+  #define __AFL_LOOP(x) ((fuzz_len = read(0, fuzz_buf, sizeof(fuzz_buf))) > 0 ?
++  #define __AFL_LOOP(iterations) ((fuzz_len = read(0, fuzz_buf, sizeof(fuzz_buf))) > 0 ?
 +  #define __AFL_INIT() sync()
 +
 +#endif
@@ -44,7 +45,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,8 +519,131 @@
+@@ -482,8 +520,130 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -59,15 +60,14 @@
 +{
 +  // DEFINE __AFL_LOOP() MUTATION ITERATIONS
 +  // This may be waaaaay too low but hey let's give it a go...
-+  //int iterations = 10;
++  //unsigned int iterations = 10;
 +  // Recommended Default (At least initially)
-+  int iterations = 1000;
-+  //int iterations = 3000;
++  unsigned int iterations = 1000;
 +  // This may be waaaaay too high but hey let's give it a go...
-+  //int iterations = 300000;
++  //unsigned int iterations = 300000;
 +  // This is the max number of mutation iterations 
 +  // may be used / loop (if 100% stability is reached)
-+  //int iterations = 2147483647;
++  //unsigned int iterations = 2147483647;
 +
 +  // Init Mutated Payload Vars
 +  unsigned int len;

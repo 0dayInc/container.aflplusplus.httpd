@@ -66,3 +66,6 @@ export AFL_LLVM_INSTRUMENT=CFG
 
 # Use Control Flow Integrity Sanitizer
 #export AFL_USE_CFISAN=1
+
+# DEBUG
+export AFL_DEBUG_CHILD_OUTPUT=1
