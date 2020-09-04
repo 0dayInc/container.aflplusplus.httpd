@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 15:46:12.000000000 -0600
++++ server/main.AFL++.c	2020-09-04 16:18:15.000000000 -0600
 @@ -14,6 +14,44 @@
   * limitations under the License.
   */
@@ -29,12 +29,12 @@
 +#ifndef __AFL_FUZZ_TESTCASE_LEN
 +  unsigned int  fuzz_len = 1024 * 1024;
 +  unsigned char fuzz_buf[fuzz_len+1];
-+  unsigned int iterations = 1000;
++  //unsigned int iterations = 1000;
 +
 +  #define __AFL_FUZZ_TESTCASE_LEN fuzz_len
 +  #define __AFL_FUZZ_TESTCASE_BUF fuzz_buf
 +  #define __AFL_FUZZ_INIT() void sync(void);
-+  #define __AFL_LOOP(iterations) ((fuzz_len = read(0, fuzz_buf, sizeof(fuzz_buf))) > 0 ?
++  #define __AFL_LOOP(x) ((fuzz_len = read(0, fuzz_buf, sizeof(fuzz_buf))) > 0 ?
 +  #define __AFL_INIT() sync()
 +
 +#endif
@@ -63,7 +63,7 @@
 +  //unsigned int iterations = 10;
 +  // Recommended Default (At least initially)
 +  unsigned int iterations = 1000;
-+  // This may be waaaaay too high but hey let's give it a go...
++  // This may be waaaaay too high but hey let's give it a try...
 +  //unsigned int iterations = 300000;
 +  // This is the max number of mutation iterations 
 +  // may be used / loop (if 100% stability is reached)
@@ -74,7 +74,7 @@
 +  unsigned char *buf;
 +
 +  printf("[+]Deferring Initialization for Speed Boost...\n");
-+  __AFL_INIT();
++  //__AFL_INIT();
 +  buf = __AFL_FUZZ_TESTCASE_BUF;
 +  printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
 +  while ( __AFL_LOOP(iterations) ){
