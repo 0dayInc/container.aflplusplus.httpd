@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 15:24:46.000000000 -0600
++++ server/main.AFL++.c	2020-09-04 15:32:52.000000000 -0600
 @@ -14,6 +14,43 @@
   * limitations under the License.
   */
@@ -28,7 +28,7 @@
 +#include <unistd.h>
 +#ifndef __AFL_FUZZ_TESTCASE_LEN
 +  unsigned int  fuzz_len;
-+  unsigned char fuzz_buf[1024000];
++  unsigned char fuzz_buf[1048576];
 +
 +  #define __AFL_FUZZ_TESTCASE_LEN fuzz_len
 +  #define __AFL_FUZZ_TESTCASE_BUF fuzz_buf
@@ -44,7 +44,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,8 +519,130 @@
+@@ -482,8 +519,131 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -144,6 +144,7 @@
 +  printf("[+] EXITING __AFL_LOOP(%d)\n", iterations);
 +
 +  int rem_pidlog;
++  printf("Remove DEFAULT_PIDLOG\n");
 +  rem_pidlog = remove("/fuzz_session/httpd/logs/httpd.pid");
 +  printf("rem_pidlog response: %d", rem_pidlog);
 +  if ( rem_pidlog != 0 ) {
@@ -176,7 +177,7 @@
  
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
-@@ -491,13 +650,23 @@
+@@ -491,13 +651,23 @@
   int main(int argc, const char *const *argv)
  #endif
  {
@@ -201,7 +202,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -750,6 +919,9 @@
+@@ -750,6 +920,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
