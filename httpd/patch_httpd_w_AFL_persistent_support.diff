@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 12:51:14.000000000 -0600
++++ server/main.AFL++.c	2020-09-04 12:57:22.000000000 -0600
 @@ -14,6 +14,43 @@
   * limitations under the License.
   */
@@ -44,7 +44,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +519,160 @@
+@@ -482,22 +519,162 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -80,12 +80,14 @@
 +  while ( __AFL_LOOP(iterations) ){
 +    len = __AFL_FUZZ_TESTCASE_LEN;
 +    //if (len == 0) continue;
++    //printf("=> Resetting buffer to %d\n", len);
++    //memset(buf, 0, len);
 +
-+    printf("=> Resetting buffer to %d\n", len);
-+    memset(buf, 0, len);
-+
++    printf("=> reading next mutation...\n");
 +    unsigned int read_bytes = read(0, buf, len);
 +
++    // Prevents mutated test cases
++    // from being submitted to httpd?
 +    buf[len-2] = '\r';
 +    buf[len-1] = '\n';
 +    buf[len] = '\0';
@@ -207,7 +209,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -750,6 +925,9 @@
+@@ -750,6 +927,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
