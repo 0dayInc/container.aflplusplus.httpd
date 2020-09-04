@@ -1,5 +1,8 @@
 #!/bin/bash --login
 # INSTRUMENTATION GLOBALS:
+custom_mutators_root='/opt/AFLplusplus/custom_mutators'
+radamsa_mutator="${custom_mutators_root}/radamsa/radamsa-mutator.so"
+honggfuzz_mutator="${custom_mutators_root}/honggfuzz/honggfuzz.so"
 
 # Define CC && CXX
 # Use afl-clang-lto/afl-clang-lto++ 
@@ -67,5 +70,9 @@ export AFL_LLVM_INSTRUMENT=CFG
 # Use Control Flow Integrity Sanitizer
 #export AFL_USE_CFISAN=1
 
+# Use Custom Mutators :)
+export AFL_CUSTOM_MUTATOR_LIBRARY=$radamsa_mutator:$honggfuzz_mutator
+
 # DEBUG
+export AFL_DEBUG=1
 export AFL_DEBUG_CHILD_OUTPUT=1
