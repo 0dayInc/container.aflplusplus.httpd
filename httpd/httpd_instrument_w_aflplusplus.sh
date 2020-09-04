@@ -2,6 +2,7 @@
 other_repos_root='/opt'
 docker_repo_root="${other_repos_root}/container.aflplusplus.httpd"
 custom_mutators_root="${other_repos_root}/AFLplusplus/custom_mutators"
+radamsa_root="${other_repos_root}/radamsa"
 
 # Define Target Instrumentation via instrumentation_globals.sh
 source $docker_repo_root/instrumentation_globals.sh
@@ -28,10 +29,12 @@ apt install -y subversion libssl-dev pkg-config strace netstat-nat net-tools apt
 
 # Install Radamsa to Support -R flag in afl-fuzz
 # (i.e. Include Radamsa for test case mutation)
-radamsa_root="${fuzz_session_root}/radamsa"
 cd $other_repos_root
-git clone https://github.com/AFLplusplus/AFLplusplus
-cd $custom_mutators_root/radamsa
+#git clone https://github.com/AFLplusplus/AFLplusplus
+#cd $custom_mutators_root/radamsa
+
+git clone https://gitlab.com/akihe/radamsa.git
+cd $radamsa_root
 make
 make install
 
