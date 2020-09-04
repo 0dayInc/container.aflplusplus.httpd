@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 14:41:16.000000000 -0600
++++ server/main.AFL++.c	2020-09-04 14:57:52.000000000 -0600
 @@ -14,6 +14,43 @@
   * limitations under the License.
   */
@@ -44,7 +44,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,8 +519,131 @@
+@@ -482,8 +519,130 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -143,11 +143,10 @@
 +  }
 +  printf("[+] EXITING __AFL_LOOP(%d)\n", iterations);
 +
-+  //printf("Removing %s\n", DEFAULT_PIDLOG);
-+  //printf("HTTPD_ROOT %s\n", HTTPD_ROOT);
-+  int del_pidlog;
-+  del_pidlog = remove("/fuzz_session/httpd/logs/httpd.pid");
-+  if ( del_pidlog != 0 ) {
++  int rem_pidlog;
++  rem_pidlog = remove("/fuzz_session/httpd/logs/httpd.pid");
++  printf("rem_pidlog response: %d", rem_pidlog);
++  if ( rem_pidlog != 0 ) {
 +    printf("[!] Ugh, unable to remove %s", DEFAULT_PIDLOG);
 +    _exit(1);
 +  } else {
@@ -177,7 +176,7 @@
  
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
-@@ -491,13 +651,23 @@
+@@ -491,13 +650,23 @@
   int main(int argc, const char *const *argv)
  #endif
  {
@@ -202,7 +201,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -750,6 +920,9 @@
+@@ -750,6 +919,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
