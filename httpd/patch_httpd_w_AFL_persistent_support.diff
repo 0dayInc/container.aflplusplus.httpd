@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 19:35:24.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 19:45:38.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -32,7 +32,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,15 +507,154 @@
+@@ -482,15 +507,151 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -40,8 +40,8 @@
 +// AFL++ SNIP
 +    destroy_and_exit_process(process, 0);
 +// AFL++ EOS
-+}
-+
+ }
+ 
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
@@ -71,8 +71,6 @@
 +  while ( __AFL_LOOP(iterations) ){
 +    unsigned int len = __AFL_FUZZ_TESTCASE_LEN;
 +
-+    printf('.');
-+    /*
 +    printf("=> memset len to buf %d\n", len);
 +    memset(buf, 0, len);
 +    size_t read_bytes = read(0, buf, len);
@@ -136,15 +134,14 @@
 +      printf("=> closing sockfd\n");
 +      close(sockfd);
 +      printf("=> successfully closed sockfd\n");
-+    */
 +  }
 +  printf("[+] EXITING __AFL_LOOP(%d)\n", iterations);
 +  //printf("[*]: EXITING AFL++ mutation thread...\n");
 +  printf("[*]: EXITING AFL++ mutation thread && parent process gracefully...\n");
 +  //pthread_exit((void *)0);
 +  destroy_and_exit_process(process, 0);
- }
- 
++}
++
 +static void INIT_AFL_THREAD(process_rec *process)
 +{
 +    pthread_t t;
@@ -188,7 +185,7 @@
      char c;
      int showcompile = 0, showdirectives = 0;
      const char *confname = SERVER_CONFIG_FILE;
-@@ -498,6 +662,7 @@
+@@ -498,6 +659,7 @@
      const char *temp_error_log = NULL;
      const char *error;
      process_rec *process;
@@ -196,7 +193,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -512,6 +677,14 @@
+@@ -512,6 +674,14 @@
      AP_MONCONTROL(0); /* turn off profiling of startup */
  
      process = init_process(&argc, &argv);
@@ -211,7 +208,7 @@
      ap_pglobal = process->pool;
      pconf = process->pconf;
      ap_server_argv0 = process->short_name;
-@@ -742,7 +915,11 @@
+@@ -742,7 +912,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -224,7 +221,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +927,9 @@
+@@ -750,6 +924,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
