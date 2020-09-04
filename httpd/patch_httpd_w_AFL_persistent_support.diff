@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 09:57:58.000000000 -0600
++++ server/main.AFL++.c	2020-09-04 10:05:20.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -67,7 +67,7 @@
 +  //unsigned int len;
 +  //unsigned char *buf;
 +  printf("[+]Deferring Initialization for Speed Boost...\n");
-+  __AFL_INIT();
++  //__AFL_INIT();
 +  //buf = __AFL_FUZZ_TESTCASE_BUF;
 +  printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
 +  while ( __AFL_LOOP(iterations) ){
