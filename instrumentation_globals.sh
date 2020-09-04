@@ -74,4 +74,5 @@ export AFL_LLVM_INSTRUMENT=CFG
 export AFL_CUSTOM_MUTATOR_LIBRARY=$radamsa_mutator:$honggfuzz_mutator
 
 # DEBUG
+export AFL_DEBUG=1
 export AFL_DEBUG_CHILD_OUTPUT=1
