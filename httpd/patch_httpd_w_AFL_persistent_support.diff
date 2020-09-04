@@ -1,6 +1,6 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 16:48:10.000000000 -0600
-@@ -14,6 +14,32 @@
++++ server/main.AFL++.c	2020-09-04 16:56:20.000000000 -0600
+@@ -14,6 +14,42 @@
   * limitations under the License.
   */
  
@@ -27,13 +27,23 @@
 +#include <sys/wait.h>
 +#include <unistd.h>
 +
++#ifndef __AFL_FUZZ_TESTCASE_LEN
++  ssize_t fuzz_len;
++  #define __AFL_FUZZ_TESTCASE_LEN fuzz_len
++  unsigned char fuzz_buf[1024000];
++  #define __AFL_FUZZ_TESTCASE_BUF fuzz_buf
++  #define __AFL_FUZZ_INIT() void sync(void);
++  #define __AFL_LOOP(x) ((fuzz_len = read(0, fuzz_buf, sizeof(fuzz_buf))) > 0 ?
++  #define __AFL_INIT() sync()
++#endif
++
 +__AFL_FUZZ_INIT();
 +// AFL++ EOS
 +
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +508,156 @@
+@@ -482,22 +518,156 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -192,7 +202,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -750,6 +910,9 @@
+@@ -750,6 +920,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
