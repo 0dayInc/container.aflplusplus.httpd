@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 11:26:40.000000000 -0600
++++ server/main.AFL++.c	2020-09-04 11:39:01.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -32,7 +32,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +507,154 @@
+@@ -482,22 +507,155 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -127,8 +127,9 @@
 +    printf("[+] Whew lad!\n");
 +    usleep(100000);
 +    //len = __AFL_FUZZ_TESTCASE_LEN;
-+  printf("Removing %s\n", HTTPD_ROOT+'/'+DEFAULT_PIDLOG);
-+  unlink(HTTPD_ROOT+'/'+DEFAULT_PIDLOG);
++  printf("Removing %s\n", DEFAULT_PIDLOG);
++  printf("HTTPD_ROOT $s\n", HTTPD_ROOT);
++  unlink(DEFAULT_PIDLOG);
 +   _exit(0);
 +  exit(0);
 +}
@@ -189,7 +190,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -750,6 +907,9 @@
+@@ -750,6 +908,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
