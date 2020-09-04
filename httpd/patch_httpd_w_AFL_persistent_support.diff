@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 17:04:50.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 18:34:52.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -32,7 +32,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,8 +507,141 @@
+@@ -482,9 +507,144 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -56,8 +56,8 @@
 +  //int iterations = 3000;
 +  // This may be waaaaay too high but hey let's give it a go...
 +  //int iterations = 300000;
-+  // This is the max number of iterations 
-+  // per loop if 100% stability is reached
++  // This is the max number of mutation iterations 
++  // may be used / loop (if 100% stability is reached)
 +  //int iterations = 2147483647;
 +
 +  // Init Mutated Payload Vars
@@ -138,10 +138,12 @@
 +*/
 +  }
 +  printf("[+] EXITING __AFL_LOOP(%d)\n", iterations);
-+  printf("[*]: EXITING AFL++ mutation thread...\n");
-+  pthread_exit((void *)0);
-+}
-+
++  //printf("[*]: EXITING AFL++ mutation thread...\n");
++  printf("[*]: EXITING AFL++ mutation thread && parent process gracefully...\n");
++  //pthread_exit((void *)0);
++  destroy_and_exit_process(process, 0);
+ }
+ 
 +static void INIT_AFL_THREAD(process_rec *process)
 +{
 +    int err;
@@ -161,21 +163,22 @@
 +      destroy_and_exit_process(process, err);
 +    }
 +
-+    err = pthread_join(t, &tret);
-+    if (err == 0) {
-+      printf("Tearing down parent process gracefully...\n");
-+      destroy_and_exit_process(process, 0);
-+    } else {
-+      printf("[!] %d: Unable to JOIN AFL++ mutation thread.\n", err);
-+      printf("[!] Tearing down parent process gracefully...\n");
-+      destroy_and_exit_process(process, err);
-+    }
- }
++    //err = pthread_join(t, &tret);
++    //if (err == 0) {
++    //  printf("Tearing down parent process gracefully...\n");
++    //  destroy_and_exit_process(process, 0);
++    //} else {
++    //  printf("[!] %d: Unable to JOIN AFL++ mutation thread.\n", err);
++    //  printf("[!] Tearing down parent process gracefully...\n");
++    //  destroy_and_exit_process(process, err);
++    //}
++}
 +// AFL++ EOS
- 
++
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
-@@ -498,6 +656,7 @@
+ #else
+@@ -498,6 +658,7 @@
      const char *temp_error_log = NULL;
      const char *error;
      process_rec *process;
@@ -183,7 +186,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -512,6 +671,14 @@
+@@ -512,6 +673,14 @@
      AP_MONCONTROL(0); /* turn off profiling of startup */
  
      process = init_process(&argc, &argv);
@@ -198,7 +201,7 @@
      ap_pglobal = process->pool;
      pconf = process->pconf;
      ap_server_argv0 = process->short_name;
-@@ -742,7 +909,11 @@
+@@ -742,7 +911,11 @@
  
      /* If our config failed, deal with that here. */
      if (rv != OK) {
@@ -211,7 +214,7 @@
      }
  
      signal_server = APR_RETRIEVE_OPTIONAL_FN(ap_signal_server);
-@@ -750,6 +921,9 @@
+@@ -750,6 +923,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
