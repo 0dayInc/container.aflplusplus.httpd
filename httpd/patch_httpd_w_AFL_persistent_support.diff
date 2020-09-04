@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-04 14:28:24.000000000 -0600
++++ server/main.AFL++.c	2020-09-04 14:41:16.000000000 -0600
 @@ -14,6 +14,43 @@
   * limitations under the License.
   */
@@ -44,7 +44,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,8 +519,135 @@
+@@ -482,8 +519,131 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -83,7 +83,7 @@
 +    printf("before buffer reset:\n");
 +    printf("input: %zd \"%s\"\n", len, buf);
 +
-+    printf("=> Resetting buffer to %d\n", len);
++    printf("=> Resetting buffer to %d bytes\n", len);
 +    memset(buf, 0, len);
 +
 +    printf("after buffer reset:\n");
@@ -91,12 +91,6 @@
 +
 +    printf("=> reading next mutation...\n");
 +    unsigned int read_bytes = read(0, buf, len);
-+
-+    // Prevents mutated test cases
-+    // from being submitted to httpd?
-+    buf[len-2] = '\r';
-+    buf[len-1] = '\n';
-+    buf[len] = '\0';
 +
 +    printf("=> init sockfd\n");
 +    int sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
@@ -137,6 +131,8 @@
 +      _exit(1);
 +    }
 +
++    // Consume HTTP Response
++    printf("=> HTTP response:\n");
 +    char b[1024 * 1024];
 +    while (recv(sockfd, b, sizeof(b), MSG_WAITALL) > 0) ;
 +      printf("=> Received from sockfd %s\n", b);
@@ -181,7 +177,7 @@
  
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
-@@ -491,13 +655,23 @@
+@@ -491,13 +651,23 @@
   int main(int argc, const char *const *argv)
  #endif
  {
@@ -206,7 +202,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -750,6 +924,9 @@
+@@ -750,6 +920,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
