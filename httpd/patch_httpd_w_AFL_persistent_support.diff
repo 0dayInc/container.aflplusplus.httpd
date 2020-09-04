@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-03 19:45:38.000000000 -0600
++++ server/main.AFL++.c	2020-09-03 20:01:08.000000000 -0600
 @@ -14,6 +14,31 @@
   * limitations under the License.
   */
@@ -32,7 +32,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,15 +507,151 @@
+@@ -482,15 +507,147 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -64,7 +64,7 @@
 +  //ssize_t len;
 +  //unsigned char *buf;
 +
-+  //printf("[+] Initializing __AFL_LOOP(%d)\n", iterations);
++  //printf("[+]Deferring Initialization for Speed Boost...\n");
 +  //__AFL_INIT();
 +  unsigned char *buf = __AFL_FUZZ_TESTCASE_BUF;
 +  printf("[+] ENTERING __AFL_LOOP(%d)...\n", iterations);
@@ -74,7 +74,6 @@
 +    printf("=> memset len to buf %d\n", len);
 +    memset(buf, 0, len);
 +    size_t read_bytes = read(0, buf, len);
-+    printf("did I get here?\n");
 +    buf[len-2] = '\r';
 +    buf[len-1] = '\n';
 +    buf[len] = '\0';
@@ -178,14 +177,11 @@
   int main(int argc, const char *const *argv)
  #endif
  {
-+#ifdef __AFL_HAVE_MANUAL_CONTROL
-+    __AFL_INIT();
-+#endif
 +
      char c;
      int showcompile = 0, showdirectives = 0;
      const char *confname = SERVER_CONFIG_FILE;
-@@ -498,6 +659,7 @@
+@@ -498,6 +655,7 @@
      const char *temp_error_log = NULL;
      const char *error;
      process_rec *process;
@@ -193,13 +189,17 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -512,6 +674,14 @@
+@@ -512,6 +670,18 @@
      AP_MONCONTROL(0); /* turn off profiling of startup */
  
      process = init_process(&argc, &argv);
 +    // AFL++ SNIP
 +    if (getenv("CRASH_TEST") == NULL) {
++#ifdef __AFL_HAVE_MANUAL_CONTROL
++      printf("[*] Deferring Initialization for Speed Boost...\n");
++      __AFL_INIT();
 +      INIT_AFL_THREAD(process);
++#endif
 +    } else {
 +      printf("[!] Crash Test Mode Initialized:\n");
 +    }
