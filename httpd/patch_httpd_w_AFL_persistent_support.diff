@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-08 09:35:04.000000000 -0600
++++ server/main.AFL++.c	2020-09-08 09:57:18.000000000 -0600
 @@ -14,6 +14,44 @@
   * limitations under the License.
   */
@@ -37,15 +37,15 @@
 +  #define __AFL_LOOP(x) ((fuzz_len = read(0, fuzz_buf, sizeof(fuzz_buf))) > 0 ?
 +  #define __AFL_INIT() sync()
 +#endif
-+*/
 +
 +__AFL_FUZZ_INIT();
++*/
 +// AFL++ EOS
 +
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,8 +520,113 @@
+@@ -482,22 +520,130 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -53,14 +53,8 @@
 +// AFL++ SNIP
 +    destroy_and_exit_process(process, 0);
 +// AFL++ EOS
-+}
-+
-+void unsh(void)
-+{
-+  unshare(CLONE_NEWUSER | CLONE_NEWNET | CLONE_NEWNS);
-+  netIfaceUp("lo");
-+}
-+
+ }
+ 
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
@@ -154,20 +148,19 @@
 +      printf("[!] Tearing down parent process gracefully...\n");
 +      destroy_and_exit_process(process, err);
 +    }
- }
++}
 +// AFL++ EOS
 +
- 
++
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
-@@ -491,13 +634,23 @@
+ #else
   int main(int argc, const char *const *argv)
  #endif
  {
 +    // AFL++ SNIP
 +    process_rec *process;
 +    if (getenv("CRASH_TEST") == NULL) {
-+      unsh();
 +      INIT_AFL_THREAD(process);
 +    } else {
 +      printf("[!] Crash Test Mode Initialized:\n");
@@ -185,7 +178,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -750,6 +903,9 @@
+@@ -750,6 +896,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
