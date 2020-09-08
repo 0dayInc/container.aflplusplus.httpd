@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-08 09:57:18.000000000 -0600
++++ server/main.AFL++.c	2020-09-08 10:26:50.000000000 -0600
 @@ -14,6 +14,44 @@
   * limitations under the License.
   */
@@ -45,7 +45,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,22 +520,130 @@
+@@ -482,8 +520,125 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -53,15 +53,41 @@
 +// AFL++ SNIP
 +    destroy_and_exit_process(process, 0);
 +// AFL++ EOS
- }
- 
++}
++
++static void PID_CLEANUP(void)
++{
++  int rem_pidlog;
++  printf("Remove DEFAULT_PIDLOG\n");
++  rem_pidlog = remove("/fuzz_session/httpd/logs/httpd.pid");
++  printf("rem_pidlog response: %d", rem_pidlog);
++
++  if ( rem_pidlog != 0 ) {
++    printf("[!] Ugh, unable to remove %s", DEFAULT_PIDLOG);
++    _exit(1);
++  }
++  printf("[+] REMOVED %s\n", DEFAULT_PIDLOG);
++}
++
 +// AFL++ SNIP
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
 +  int BUFSIZE=1024*1024;
-+  usleep(10000);
++  //usleep(10000);
 +  char buf[BUFSIZE+1];
-+  while ( __AFL_LOOP(30000) ){
++
++  // DEFINE __AFL_LOOP() MUTATION ITERATIONS
++  // This may be waaaaay too low but hey let's give it a go...
++  //unsigned int iterations = 10;
++  // Recommended Default (At least initially)
++  unsigned int iterations = 1000;
++  // This may be waaaaay too high but hey let's give it a go...
++  //unsigned int iterations = 300000;
++  // This is the max number of mutation iterations
++  // may be used / loop (if 100% stability is reached)
++  //unsigned int iterations = 2147483647;
++
++  while ( __AFL_LOOP(iterations) ){
 +    printf("[+] Looping\n");
 +    memset(buf, 0, BUFSIZE);
 +    size_t read_bytes = read(0, buf, BUFSIZE);
@@ -72,12 +98,14 @@
 +    int sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 +    if (sockfd == -1) {
 +      perror("socket");
++      PID_CLEANUP();
 +      _exit(1);
 +    }
 +
 +    int sz = (1024 * 1024);
 +    if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz)) == -1) {
 +      perror("setsockopt");
++      PID_CLEANUP();
 +      exit(1);
 +    }
 +
@@ -97,6 +125,7 @@
 +
 +    if (send(sockfd, buf, read_bytes, MSG_NOSIGNAL) != read_bytes) {
 +      perror("send() failed 1");
++      PID_CLEANUP();
 +      exit(1);
 +    }
 +
@@ -104,6 +133,7 @@
 +
 +    if (shutdown(sockfd, SHUT_WR) == -1) {
 +      perror("shutdown");
++      PID_CLEANUP();
 +      exit(1);
 +    }
 +
@@ -115,21 +145,9 @@
 +    close(sockfd);
 +    printf("[+] Nice run\n");
 +  }
++  PID_CLEANUP();
 +  printf("[+] Whew lad!\n");
-+  usleep(100000);
-+
-+  int rem_pidlog;
-+  printf("Remove DEFAULT_PIDLOG\n");
-+  rem_pidlog = remove("/fuzz_session/httpd/logs/httpd.pid");
-+  printf("rem_pidlog response: %d", rem_pidlog);
-+
-+  if ( rem_pidlog != 0 ) {
-+    printf("[!] Ugh, unable to remove %s", DEFAULT_PIDLOG);
-+    _exit(1);
-+  } else {
-+    printf("[+] REMOVED %s\n", DEFAULT_PIDLOG);
-+    _exit(0);
-+  }
++  //usleep(100000);
 +}
 +
 +static void INIT_AFL_THREAD(process_rec *process)
@@ -148,13 +166,13 @@
 +      printf("[!] Tearing down parent process gracefully...\n");
 +      destroy_and_exit_process(process, err);
 +    }
-+}
+ }
 +// AFL++ EOS
 +
-+
+ 
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
- #else
+@@ -491,13 +646,22 @@
   int main(int argc, const char *const *argv)
  #endif
  {
@@ -178,7 +196,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -750,6 +896,9 @@
+@@ -750,6 +914,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
