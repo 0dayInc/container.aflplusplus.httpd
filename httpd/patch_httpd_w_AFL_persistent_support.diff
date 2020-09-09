@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-09 09:11:53.000000000 -0600
++++ server/main.AFL++.c	2020-09-09 09:16:37.000000000 -0600
 @@ -14,6 +14,44 @@
   * limitations under the License.
   */
@@ -55,6 +55,7 @@
 +// AFL++ EOS
 +}
 +
++// AFL++ SNIP
 +static void PID_CLEANUP(void)
 +{
 +  int rem_pidlog;
@@ -69,8 +70,7 @@
 +  printf("[+] REMOVED %s\n", DEFAULT_PIDLOG);
 +}
 +
-+// AFL++ SNIP
-++static void netIfaceUp(const char *ifacename)
++static void netIfaceUp(const char *ifacename)
 +{
 +    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 +    if (sock == -1) {
