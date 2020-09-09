@@ -1,5 +1,5 @@
 --- server/main.c	2020-09-02 09:24:31.000000000 -0600
-+++ server/main.AFL++.c	2020-09-08 10:26:50.000000000 -0600
++++ server/main.AFL++.c	2020-09-09 09:11:53.000000000 -0600
 @@ -14,6 +14,44 @@
   * limitations under the License.
   */
@@ -45,7 +45,7 @@
  #include "apr.h"
  #include "apr_strings.h"
  #include "apr_getopt.h"
-@@ -482,8 +520,125 @@
+@@ -482,8 +520,157 @@
      ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                   "  -X                 : debug mode (only one worker, do not detach)");
  
@@ -70,6 +70,38 @@
 +}
 +
 +// AFL++ SNIP
+++static void netIfaceUp(const char *ifacename)
++{
++    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
++    if (sock == -1) {
++        perror("socket(AF_INET, SOCK_STREAM, IPPROTO_IP)");
++        _exit(1);
++    }
++
++    struct ifreq ifr;
++    memset(&ifr, '\0', sizeof(ifr));
++    snprintf(ifr.ifr_name, IF_NAMESIZE, "%s", ifacename);
++
++    if (ioctl(sock, SIOCGIFFLAGS, &ifr) == -1) {
++        perror("ioctl(iface='lo', SIOCGIFFLAGS, IFF_UP)");
++        _exit(1);
++    }
++
++    ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
++
++    if (ioctl(sock, SIOCSIFFLAGS, &ifr) == -1) {
++        perror("ioctl(iface='lo', SIOCSIFFLAGS, IFF_UP)");
++        _exit(1);
++    }
++
++    close(sock);
++}
++
++{
++    unshare(CLONE_NEWUSER | CLONE_NEWNET | CLONE_NEWNS);
++    netIfaceUp("lo");
++}
++
 +static void INIT_AFL_MUTATION_SESSION(process_rec *process)
 +{
 +  int BUFSIZE=1024*1024;
@@ -106,7 +138,7 @@
 +    if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz)) == -1) {
 +      perror("setsockopt");
 +      PID_CLEANUP();
-+      exit(1);
++      _exit(1);
 +    }
 +
 +    printf("[+] Connecting\n", buf);
@@ -126,7 +158,7 @@
 +    if (send(sockfd, buf, read_bytes, MSG_NOSIGNAL) != read_bytes) {
 +      perror("send() failed 1");
 +      PID_CLEANUP();
-+      exit(1);
++      _exit(1);
 +    }
 +
 +    printf("[+] Buf sent %s\n", &buf);
@@ -134,7 +166,7 @@
 +    if (shutdown(sockfd, SHUT_WR) == -1) {
 +      perror("shutdown");
 +      PID_CLEANUP();
-+      exit(1);
++      _exit(1);
 +    }
 +
 +    char b[1024 * 1024];
@@ -172,13 +204,14 @@
  
  #ifdef HFND_FUZZING_ENTRY_FUNCTION
   HFND_FUZZING_ENTRY_FUNCTION(int argc, const char *const *argv)
-@@ -491,13 +646,22 @@
+@@ -491,13 +678,23 @@
   int main(int argc, const char *const *argv)
  #endif
  {
 +    // AFL++ SNIP
 +    process_rec *process;
 +    if (getenv("CRASH_TEST") == NULL) {
++      unsh();
 +      INIT_AFL_THREAD(process);
 +    } else {
 +      printf("[!] Crash Test Mode Initialized:\n");
@@ -196,7 +229,7 @@
      apr_pool_t *pconf;
      apr_pool_t *plog; /* Pool of log streams, reset _after_ each read of conf */
      apr_pool_t *ptemp; /* Pool for temporary config stuff, reset often */
-@@ -750,6 +914,9 @@
+@@ -750,6 +947,9 @@
          int exit_status;
  
          if (signal_server(&exit_status, pconf) != 0) {
